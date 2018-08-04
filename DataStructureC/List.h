@@ -54,6 +54,7 @@ extern "C"
 	}LINKLIST,*PLINKLIST;
 
 	Status LinklistInit(LINKLIST *list, PCOMPAREROUTINE compareroutine, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine);
+	void LinklistClear(LINKLIST *list);
 
 /*typedef	int(*PLINKLIST_COMPARE_ROUTINE)(struct _LINKLIST *pLinkList, void *FirstStruct, void *SecondStruct);
 typedef	void *(*PLINKLIST_ALLOCATE_ROUTINE)(struct _LINKLIST *pLinkList, unsigned int ByteSize);
