@@ -6,6 +6,8 @@
 
 void *__cdecl AllocateRoutine(size_t ByteSize)
 {
+	static int count = 0;
+	count++;
 	return new unsigned char[ByteSize];
 }
 
@@ -27,7 +29,7 @@ int RangeRandom(int range_min, int range_max)
 
 int main()
 {
-	
+	ShowLinklist();
     return 0;
 }
 

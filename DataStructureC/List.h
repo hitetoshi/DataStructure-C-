@@ -1,10 +1,5 @@
 #pragma once
 
-#include <stdlib.h>
-#include <memory.h>
-#include <stdbool.h>
-
-#include "DataStructureC.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -16,7 +11,7 @@ extern "C"
 
 	typedef	struct _SQLIST
 	{
-		NODEELEMENT **elem;					//存储空间基址
+		NODEELEMENT *elem;					//存储空间基址
 		size_t length;						//当前长度
 		size_t listsize;					//当前分配的存储容量
 		PCOMPAREROUTINE compareroutine;		//比较函数
@@ -29,7 +24,7 @@ extern "C"
 	Status SqlistInsert(SQLIST *list, size_t pos, NODEELEMENT *elem);
 	void SqlistDestroy(SQLIST *list);
 	void SqlistClear(SQLIST *list);
-	bool SqlistEmpty(SQLIST *list);
+	Status SqlistEmpty(SQLIST *list);
 	size_t SqlistLength(SQLIST *list);
 	Status SqlistGetElem(SQLIST *list, size_t pos, NODEELEMENT *elem);
 	size_t SqlistLocate(SQLIST *list, NODEELEMENT *elem);
@@ -40,9 +35,9 @@ extern "C"
 
 	typedef	struct _LINKLIST_NODE
 	{
-		NODEELEMENT *elem;
+		NODEELEMENT elem;
 		struct _LINKLIST_NODE *next;
-	}LINKLISTNODE, *PLINKLISTNODE;
+	}LINKLISTNODE, *PLINKLISTNODE, *LINKLISTPOSITION;
 
 	typedef struct _LINKLIST
 	{
@@ -53,45 +48,39 @@ extern "C"
 		PFREEROUTINE freeroutine;			//内存释放函数
 	}LINKLIST,*PLINKLIST;
 
+	Status LinklistMakeNode(PALLOCATEROUTINE allocateroutine, PLINKLISTNODE *p, NODEELEMENT *elem);
+	Status LinklistFreeNode(PFREEROUTINE freeroutine, PLINKLISTNODE *p);
 	Status LinklistInit(LINKLIST *list, PCOMPAREROUTINE compareroutine, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine);
 	void LinklistClear(LINKLIST *list);
+	void LinklistDestroy(LINKLIST *list);
 
-/*typedef	int(*PLINKLIST_COMPARE_ROUTINE)(struct _LINKLIST *pLinkList, void *FirstStruct, void *SecondStruct);
-typedef	void *(*PLINKLIST_ALLOCATE_ROUTINE)(struct _LINKLIST *pLinkList, unsigned int ByteSize);
-typedef	void(*PLINKLIST_FREE_ROUTINE)(struct _LINKLIST *pLinkList, void *Buffer);
+	//链表节点操作的一组函数
+	//根据上下文和教材算法2.20理解,以下函数似乎只对链表节点做插入删除操作,并不
+	//实际分配和释放节点内存
+	Status LinklistInsFirst(LINKLISTNODE *h, PLINKLISTNODE s);
+	Status LinklistDelFirst(LINKLISTNODE *h, PLINKLISTNODE *q);
+	Status LinklistAppend(LINKLIST *list, PLINKLISTNODE s);
+	Status LinklistRemove(LINKLIST *list, PLINKLISTNODE *q);
+	Status LinklistInsBefor(LINKLIST *list, PLINKLISTNODE *p, PLINKLISTNODE s);
+	Status LinklistInsAfter(LINKLIST *list, PLINKLISTNODE *p, PLINKLISTNODE s);
 
-typedef	struct _LINKLIST_ELEMENT
-{
-	void *data;
-	unsigned int size;
-}LINKLIST_ELEMENT;
+	//与Sqlist相同的一组操作,对节点元素实际分配和释放节点内存,再调用上面一组函数做节点的插入删除操作
+	//根据教材的定义和算法2.20,Linklist必须包含一个没有数据的头结点,这导致Linklist各节点的地位不是平等的。
+	//本例按C语言习惯,对有关节点序号的操作排除头结点,即以下函数中pos=0表示访问第一个数据节点
+	Status LinklistInsert(LINKLIST *list, size_t pos, NODEELEMENT *elem);
+	Status LinklistGetElem(LINKLIST *list, size_t pos, NODEELEMENT *elem);
+	size_t LinklistLocate(LINKLIST *list, NODEELEMENT *elem);
 
-typedef	struct _LINKLIST_NODE
-{
-	LINKLIST_ELEMENT Element;
-	struct _LINKLIST_NODE *pNext;
-}LINKLIST_NODE, *PLINKLIST_NODE;
-
-typedef	struct _LINKLIST
-{
-	PLINKLIST_COMPARE_ROUTINE CompareRoutine;
-	PLINKLIST_ALLOCATE_ROUTINE AllocateRoutine;
-	PLINKLIST_FREE_ROUTINE FreeRoutine;
-	PLINKLIST_NODE pFirstNode;
-}LINKLIST, *PLINKLIST;
-
-void LinklistInit(LINKLIST *pLinklist, PLINKLIST_COMPARE_ROUTINE CompareRoutine,
-	PLINKLIST_ALLOCATE_ROUTINE AllocateRoutine, PLINKLIST_FREE_ROUTINE FreeRoutine);
-void LinklistClear(LINKLIST *pLinklist);
-#define	LinklistFirstNode(p)	((LINKLIST *)p)->pFirstNode
-bool LinklistEmpty(LINKLIST *pLinklist);
-int LinklistLength(LINKLIST *pLinklist);
-void *LinklistGetElement(LINKLIST *pLinklist, int i);
-void *LinklistLookupElement(LINKLIST *pLinklist, void *pElement);
-void *LinklistPriorElement(LINKLIST *pLinklist, void *pElement);
-void *LinklistNextElement(LINKLIST *pLinklist, void *pElement);
-void *LinklistInsertElement(LINKLIST *pLinklist, int i, void *pElement, unsigned int nElementSize);
-bool LinklistDeleteElement(LINKLIST *pLinklist, int i, void *pElement, unsigned int nElementSize);*/
+	Status LinklistSetCurElem(PLINKLISTNODE *p, NODEELEMENT *elem);
+	NODEELEMENT *LinklistGetCurElem(PLINKLISTNODE p);
+	Status LinklistEmpty(LINKLIST *list);
+	int LinklistLength(LINKLIST *list);
+	LINKLISTPOSITION LinklistHeader(LINKLIST *list);
+	LINKLISTPOSITION LinklistGetLast(LINKLIST *list);
+	LINKLISTPOSITION LinklistPriorPos(LINKLIST *list, PLINKLISTNODE p);
+	LINKLISTPOSITION LinklistNextPos(LINKLIST *list, PLINKLISTNODE p);
+	Status LinklistLocatePos(LINKLIST *list, size_t i, PLINKLISTNODE *p);
+	Status LinklistTraverse(LINKLIST *list, Status(_cdecl *visit)(NODEELEMENT *elem));
 
 #ifdef __cplusplus
 }

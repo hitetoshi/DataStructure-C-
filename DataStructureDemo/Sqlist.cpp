@@ -25,8 +25,8 @@ void ShowSqlist()
 			elem.size = sizeof(int);
 			v = rand();
 			elem.data = &v;
-			pos = RangeRandom(0, SqlistLength(&sqlist1) + 1);	//插入线性表位置0-线性表长度随机
-			status = SqlistInsert(&sqlist1, SqlistLength(&sqlist1), &elem);
+			pos = RangeRandom(0, (int)SqlistLength(&sqlist1) + 1);	//插入线性表位置0-线性表长度随机
+			status = SqlistInsert(&sqlist1, pos, &elem);
 			if (v > max)
 			{
 				max = v;

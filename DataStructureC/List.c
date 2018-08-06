@@ -1,11 +1,11 @@
-#include "list.h"
+#include "DataStructureC.h"
 
 Status SqlistInit(SQLIST *list, PCOMPAREROUTINE compareroutine, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine)
 {
-	list->elem = MEM_ALOC(LIST_INIT_SIZE*sizeof(NODEELEMENT **));
+	list->elem = MEM_ALOC(LIST_INIT_SIZE*sizeof(NODEELEMENT));
 	if (list->elem)
 	{
-		memset(list->elem, 0, LIST_INIT_SIZE * sizeof(NODEELEMENT **));
+		memset(list->elem, 0, LIST_INIT_SIZE * sizeof(NODEELEMENT));
 		list->length = 0;
 		list->listsize = LIST_INIT_SIZE;
 		list->compareroutine = compareroutine;
@@ -21,21 +21,21 @@ Status SqlistInit(SQLIST *list, PCOMPAREROUTINE compareroutine, PALLOCATEROUTINE
 
 Status SqlistInsert(SQLIST *list, size_t pos, NODEELEMENT *elem)
 {
-	NODEELEMENT **new_base;
-	NODEELEMENT **p;
-	NODEELEMENT *new_elem;
+	NODEELEMENT *new_base;
+	NODEELEMENT *p;
+	void *new_node_data;
 
-	if (pos<0 || pos>list->length)
+	if (pos<0 || pos > list->length)
 	{
-		return ERROR;
+		return INFEASIBLE;
 	}
 	if (list->length >= list->listsize)
 	{
-		new_base = MEM_REALOC(list->elem, (list->length + LIST_INCREMENT) * sizeof(NODEELEMENT **));
+		new_base = MEM_REALOC(list->elem, (list->length + LIST_INCREMENT) * sizeof(NODEELEMENT));
 		if (new_base)
 		{
 			list->elem = new_base;
-			memset(list->elem + list->listsize, 0, sizeof(NODEELEMENT **) * LIST_INCREMENT);
+			memset(list->elem + list->listsize, 0, sizeof(NODEELEMENT) * LIST_INCREMENT);
 			list->listsize += LIST_INCREMENT;
 		}
 		else
@@ -43,39 +43,31 @@ Status SqlistInsert(SQLIST *list, size_t pos, NODEELEMENT *elem)
 			return OVERFLOW;
 		}
 	}
-	new_elem = MEM_ALOC(sizeof(NODEELEMENT));
-	if (new_elem)
+	new_node_data= list->allocateroutine(elem->size);
+	if (new_node_data)
 	{
-		memset(new_elem, 0, sizeof(NODEELEMENT));
-		new_elem->data = list->allocateroutine(elem->size);
-		if (new_elem)
+		memcpy(new_node_data, elem->data, elem->size);
+
+		////时间复杂度:T(n)=O(n)
+		for (p = list->elem + list->length - 1; p >= list->elem + pos; p--)
 		{
-			memcpy(new_elem->data, elem->data, elem->size);
-			new_elem->size = elem->size;
-			//时间复杂度T(n)=O(list->length)
-			for (p = list->elem + list->length - 1; p >= list->elem + pos; p--)
-			{
-				*(p + 1) = *p;
-			}
-			*(list->elem + pos) = new_elem;
-			list->length++;
-			return OK;
+			*(p + 1) = *p;
 		}
-		else
-		{
-			MEM_FREE(new_elem);
-			return OVERFLOW;
-		}
+
+		list->elem[pos].data = new_node_data;
+		list->elem[pos].size = elem->size;
+		list->length++;
 	}
 	else
 	{
 		return OVERFLOW;
 	}
+	return OK;
 }
 
 void SqlistDestroy(SQLIST *list)
 {
-	//T(n)=O(list->length)
+	//T(n)=O(n)
 	//由SqlistClear决定
 	SqlistClear(list);
 	MEM_FREE(list->elem);
@@ -85,23 +77,22 @@ void SqlistDestroy(SQLIST *list)
 
 void SqlistClear(SQLIST *list)
 {
-	size_t i;
-
-	//时间复杂度T(n)=O(list->length)
-	for (i = 0; i < list->length; i++)
+	//T(n)=O(n)
+	while(list->length)
 	{
-		MEM_FREE((*(list->elem + i))->data);
-		(*(list->elem + i))->data = NULL;
-		(*(list->elem + i))->size = 0;
-		MEM_FREE(*(list->elem + i));
-		*(list->elem + i) = NULL;
+		if (list->elem[0].data)
+		{
+			MEM_FREE(list->elem[0].data);
+		}
+		list->elem[0].data = NULL;
+		list->elem[0].size = 0;
 		list->length--;
 	}
 }
 
-bool SqlistEmpty(SQLIST *list)
+Status SqlistEmpty(SQLIST *list)
 {
-	return (bool)(list->length==0);
+	return list->length == 0 ? TRUE : FALSE;
 }
 
 size_t SqlistLength(SQLIST *list)
@@ -111,11 +102,11 @@ size_t SqlistLength(SQLIST *list)
 
 Status SqlistGetElem(SQLIST *list, size_t pos, NODEELEMENT *elem)
 {
-	//时间复杂度T(n)=O(1)
+	//T(n)=O(1)
 	if (pos >= 0 && pos < list->length)
 	{
-		elem->data = list->elem[pos]->data;
-		elem->size = list->elem[pos]->size;
+		elem->data = list->elem[pos].data;
+		elem->size = list->elem[pos].size;
 		return OK;
 	}
 	else
@@ -128,10 +119,10 @@ size_t SqlistLocate(SQLIST *list, NODEELEMENT *elem)
 {
 	size_t pos;
 
-	//T(n)=O(list->length)
+	//T(n)=O(n)
 	for (pos = 0; pos < list->length; pos++)
 	{
-		if (list->compareroutine(elem, list->elem[pos]) == 0)
+		if (list->compareroutine(elem, list->elem + pos) == 0)
 		{
 			return pos;
 		}
@@ -141,12 +132,12 @@ size_t SqlistLocate(SQLIST *list, NODEELEMENT *elem)
 
 Status SqlistPriorElem(SQLIST *list, NODEELEMENT *elem, NODEELEMENT *pre_elem)
 {
-	//T(n)=O(list->length)
+	//T(n)=O(n)
 	size_t pos = SqlistLocate(list, elem);
 	if (pos != -1 && pos > 0)
 	{
-		pre_elem->data = list->elem[pos-1]->data;
-		pre_elem->size = list->elem[pos-1]->size;
+		pre_elem->data = list->elem[pos-1].data;
+		pre_elem->size = list->elem[pos-1].size;
 		return OK;
 	}
 	else
@@ -157,13 +148,13 @@ Status SqlistPriorElem(SQLIST *list, NODEELEMENT *elem, NODEELEMENT *pre_elem)
 
 Status SqlistNextElem(SQLIST *list, NODEELEMENT *elem, NODEELEMENT *pre_elem)
 {
-	//T(n)=O(list->length)
+	//T(n)=O(n)
 	size_t pos = SqlistLocate(list, elem);
 
 	if (pos >= 0 && pos < list->length - 1)
 	{
-		pre_elem->data = list->elem[pos + 1]->data;
-		pre_elem->size = list->elem[pos + 1]->size;
+		pre_elem->data = list->elem[pos + 1].data;
+		pre_elem->size = list->elem[pos + 1].size;
 		return OK;
 	}
 	else
@@ -174,24 +165,27 @@ Status SqlistNextElem(SQLIST *list, NODEELEMENT *elem, NODEELEMENT *pre_elem)
 
 Status SqlistDelete(SQLIST *list, size_t pos, NODEELEMENT *elem)
 {
-	NODEELEMENT **p;
+	NODEELEMENT *p;
 	if (pos >= 0 && pos < list->length)
 	{
-		if (elem->size >= list->elem[pos]->size)
+		if (elem->size >= list->elem[pos].size)
 		{
-			memcpy(elem->data, list->elem[pos]->data, list->elem[pos]->size);
-			elem->size = list->elem[pos]->size;
-		}
-		list->freeroutine(list->elem[pos]->data);
-		MEM_FREE(list->elem[pos]);
+			memcpy(elem->data, list->elem[pos].data, list->elem[pos].size);
+			elem->size = list->elem[pos].size;
+			list->freeroutine(list->elem[pos].data);
 
-		//T(n)=O(list->length)
-		for (p = list->elem + pos; p < list->elem + list->length - 1; p++)
-		{
-			*p = *(p + 1);
+			//T(n)=O(n)
+			for (p = list->elem + pos; p < list->elem + list->length - 1; p++)
+			{
+				*p = *(p + 1);
+			}
+			list->length--;
+			return OK;
 		}
-		list->length--;
-		return OK;
+		else
+		{
+			return BUFFER_TOO_SMALL;
+		}
 	}
 	else
 	{
@@ -216,167 +210,348 @@ void SqlistUnio(SQLIST *list1, SQLIST *list2)
 	}
 }
 
-/*void LinklistInit(LINKLIST *pLinklist, PLINKLIST_COMPARE_ROUTINE CompareRoutine,
-	PLINKLIST_ALLOCATE_ROUTINE AllocateRoutine, PLINKLIST_FREE_ROUTINE FreeRoutine)
-{
-	pLinklist->AllocateRoutine = AllocateRoutine;
-	pLinklist->CompareRoutine = CompareRoutine;
-	pLinklist->FreeRoutine = FreeRoutine;
-	LinklistFirstNode(pLinklist) = NULL;
-}
+//Linklist
 
-void LinklistClear(LINKLIST *pLinklist)
+Status LinklistMakeNode(PALLOCATEROUTINE allocateroutine, PLINKLISTNODE *p, NODEELEMENT *elem)
 {
-	PLINKLIST_NODE pNode = LinklistFirstNode(pLinklist);
-	PLINKLIST_NODE pNextNode;
-	while (pNode)
+	*p = MEM_ALOC(sizeof(LINKLISTNODE));
+	if (*p)
 	{
-		pLinklist->FreeRoutine(pLinklist, pNode);
-		pNextNode = pNode->pNext;
-		free(pNode);
-		pNode = pNextNode;
+		(*p)->elem.data = allocateroutine(elem->size);
+		if ((*p)->elem.data)
+		{
+			memcpy((*p)->elem.data, elem->data, elem->size);
+			(*p)->elem.size = elem->size;
+			(*p)->next = NULL;
+			return OK;
+		}
+		else
+		{
+			MEM_FREE(*p);
+			*p = NULL;
+			return ERROR;
+		}
+	}
+	else
+	{
+		return ERROR;
 	}
 }
 
-bool LinklistEmpty(LINKLIST *pLinklist)
+Status LinklistFreeNode(PFREEROUTINE freeroutine, PLINKLISTNODE *p)
 {
-	return (bool)(LinklistFirstNode(pLinklist));
+	freeroutine((*p)->elem.data);
+	(*p)->elem.data = NULL;
+	(*p)->elem.size = 0;
+	MEM_FREE(*p);
+	*p = NULL;
+	return OK;
 }
 
-int LinklistLength(LINKLIST *pLinklist)
+Status LinklistInit(LINKLIST *list, PCOMPAREROUTINE compareroutine, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine)
 {
-	int count = 0;
-	LINKLIST_NODE *pNode = LinklistFirstNode(pLinklist);
-	while (pNode)
+	list->header = MEM_ALOC(sizeof(LINKLISTNODE));
+	if (list->header)
 	{
+		list->compareroutine=compareroutine;
+		list->allocateroutine=allocateroutine;
+		list->freeroutine=freeroutine;
+		list->header->elem.data = NULL;
+		list->header->elem.size = 0;
+		list->header->next = NULL;
+		list->tail = NULL;
+		list->len = 0;
+		return OK;
+	}
+	else
+	{
+		return ERROR;
+	}
+}
+
+void LinklistClear(LINKLIST *list)
+{
+	LINKLISTNODE *header = LinklistHeader(list);
+	LINKLISTNODE *node = header->next;
+	LINKLISTNODE *next;
+	//T(n)=O(n)
+	while (node)
+	{
+		next = node->next;
+		LinklistFreeNode(list->freeroutine, &node);
+		list->len--;
+		node = next;
+	}
+	list->header->next = NULL;;
+	list->tail = NULL;
+}
+
+void LinklistDestroy(LINKLIST *list)
+{
+	LinklistClear(list);
+	MEM_FREE(list->header);
+	list->header = NULL;
+}
+
+Status LinklistInsFirst(LINKLISTNODE *h, PLINKLISTNODE s)
+{
+	s->next = h->next;
+	h->next = s;
+	return OK;
+}
+
+Status LinklistDelFirst(LINKLISTNODE *h, PLINKLISTNODE *q)
+{
+	if (h->next)
+	{
+		*q = h->next;
+		h->next = (*(q))->next;
+		return OK;
+	}
+	else
+	{
+		return ERROR;
+	}
+}
+
+Status LinklistAppend(LINKLIST *list, PLINKLISTNODE s)
+{
+	PLINKLISTNODE node;
+	PLINKLISTNODE next;
+
+	list->tail->next = s;
+	node = s;
+	if (s)
+	{
+		next = node->next;
+		list->len++;
+		while (next)
+		{
+			node = node->next;
+			next = node->next;
+			list->len++;
+		}
+		list->tail = node;
+	}
+	return OK;
+}
+
+Status LinklistRemove(LINKLIST *list, PLINKLISTNODE *q)
+{
+	PLINKLISTNODE node = list->header;
+
+	while (node)
+	{
+		if (node->next == list->tail)
+		{
+			*q = list->tail;
+			node->next = NULL;
+			list->tail = node;
+			return OK;
+		}
+		node = node->next;
+	}
+	return INFEASIBLE;
+}
+
+Status LinklistInsBefor(LINKLIST *list, PLINKLISTNODE *p, PLINKLISTNODE s)
+{
+	PLINKLISTNODE node = list->header;
+
+	while (node)
+	{
+		if (node->next == *p)
+		{
+			s->next = node->next;
+			node->next = s;
+			*p = s;
+			return OK;
+		}
+		node = node->next;
+	}
+	return INFEASIBLE;
+}
+
+Status LinklistInsAfter(LINKLIST *list, PLINKLISTNODE *p, PLINKLISTNODE s)
+{
+	PLINKLISTNODE node = list->header;
+
+	if (node == *p)
+	{
+		*p = s;
+		return LinklistInsFirst(node, s);
+	}
+
+	while (node)
+	{
+		if (node == *p)
+		{
+			s->next = node->next;
+			node->next = s;
+			*p = s;
+			return OK;
+		}
+		node = node->next;
+	}
+
+	return INFEASIBLE;
+}
+
+Status LinklistSetCurElem(PLINKLISTNODE *p, NODEELEMENT *elem)
+{
+	if ((*p)->elem.size >= elem->size)
+	{
+		memcpy((*p)->elem.data, elem->data, elem->size);
+		(*p)->elem.size = elem->size;
+		return OK;
+	}
+	else
+	{
+		return ERROR;
+	}
+}
+
+NODEELEMENT *LinklistGetCurElem(PLINKLISTNODE p)
+{
+	return &(p->elem);
+}
+
+Status LinklistEmpty(LINKLIST *list)
+{
+	return list->len == 0 ? TRUE : FALSE;
+}
+
+int LinklistLength(LINKLIST *list)
+{
+	return list->len;
+}
+
+LINKLISTPOSITION LinklistHeader(LINKLIST *list)
+{
+	return list->header;
+}
+
+LINKLISTPOSITION LinklistGetLast(LINKLIST *list)
+{
+	return list->tail;
+}
+
+LINKLISTPOSITION LinklistPriorPos(LINKLIST *list, PLINKLISTNODE p)
+{
+	LINKLISTNODE *node = list->header;
+
+	while (node)
+	{
+		if (node->next == p)
+		{
+			return node;
+		}
+		node = node->next;
+	}
+	return NULL;
+}
+
+LINKLISTPOSITION LinklistNextPos(LINKLIST *list, PLINKLISTNODE p)
+{
+	LINKLISTNODE *node = list->header;
+
+	while (node)
+	{
+		if (p == node)
+		{
+			return node->next;
+		}
+		node = node->next;
+	}
+	return NULL;
+}
+
+Status LinklistLocatePos(LINKLIST *list, size_t i, PLINKLISTNODE *p)
+{
+	LINKLISTNODE *node = list->header;
+	size_t count = 0;
+
+	while (node)
+	{
+		if (i == count)
+		{
+			*p = node;
+			return OK;
+		}
 		count++;
-		pNode = pNode->pNext;
+		node = node->next;
 	}
-	return count;
+	return INFEASIBLE;
 }
 
-void *LinklistGetElement(LINKLIST *pLinklist, int i)
+Status LinklistInsert(LINKLIST *list, size_t pos, NODEELEMENT *elem)
 {
-	LINKLIST_NODE *pNode = LinklistFirstNode(pLinklist);
-	int index = 0;
+	LINKLISTNODE *node;
+	LINKLISTNODE *new_node;
 
-	while (pNode && index++!=i)
+	if (LinklistLocatePos(list, pos, &node)==OK)
 	{
-		pNode = pNode->pNext;
-	}
-	return pNode?pNode->Element.data:NULL;
-}
-
-void *LinklistLookupElement(LINKLIST *pLinklist, void *pElement)
-{
-	LINKLIST_NODE *pNode = LinklistFirstNode(pLinklist);
-	void *pLinklistElement = NULL;
-
-	while (pNode && !pLinklistElement)
-	{
-		if (pLinklist->CompareRoutine(pLinklist, pElement, pNode->Element.data) == 0)
+		if (LinklistMakeNode(list->allocateroutine, &new_node, elem) == OK)
 		{
-			pLinklistElement = pNode->Element.data;
-		}
-		pNode = pNode->pNext;
-	}
-
-	return pLinklistElement;
-}
-
-void *LinklistPriorElement(LINKLIST *pLinklist, void *pElement)
-{
-	LINKLIST_NODE *pNode = LinklistFirstNode(pLinklist);
-	void *pLinklistElement=NULL;
-	
-	if (pNode)
-	{
-		while (pNode->pNext && !pLinklistElement)
-		{
-			if (pLinklist->CompareRoutine(pLinklist, pElement, pNode->pNext->Element.data) == 0)
+			if (LinklistInsFirst(node, new_node) == OK)
 			{
-				pLinklistElement = pNode->Element.data;
-			}
-			pNode = pNode->pNext;
-		}
-	}
-	return pLinklistElement;
-}
-
-void *LinklistNextElement(LINKLIST *pLinklist, void *pElement)
-{
-	LINKLIST_NODE *pNode = LinklistFirstNode(pLinklist);
-	void *pLinklistElement = NULL;
-
-	while (pNode && pNode->pNext && !pLinklistElement)
-	{
-		if (pLinklist->CompareRoutine(pLinklist, pElement, pNode->Element.data) == 0)
-		{
-			pLinklistElement = pNode->pNext->Element.data;
-		}
-	}
-	return pLinklistElement;
-}
-
-void *LinklistInsertElement(LINKLIST *pLinklist, int i, void *pElement, unsigned int nElementSize)
-{
-	LINKLIST_NODE *pNode = LinklistFirstNode(pLinklist);
-	int index = 0;
-	LINKLIST_NODE *pNewNode = NULL;
-
-	if (i != 0)
-	{
-		while (pNode && index++ != i-1)
-		{
-			pNode = pNode->pNext;
-		}
-	}
-	if (pNode || i==0)
-	{
-		pNewNode = malloc(sizeof(LINKLIST_NODE));
-		if (pNewNode)
-		{
-			pNewNode->Element.data = pLinklist->AllocateRoutine(pLinklist, nElementSize);
-			if (pNewNode->Element.data)
-			{
-				memcpy(pNewNode->Element.data, pElement, nElementSize);
-				pNewNode->Element.size = nElementSize;
-				pNewNode->pNext = (i==0? LinklistFirstNode(pLinklist):pNode->pNext);
-				(i == 0) ? (LinklistFirstNode(pLinklist) = pNewNode) : (pNode->pNext = pNewNode);
+				if (new_node->next == NULL)
+				{
+					list->tail = new_node;
+				}
+				list->len++;
+				return OK;
 			}
 			else
 			{
-				free(pNewNode);
-				pNewNode = NULL;
+				LinklistFreeNode(list->freeroutine, &new_node);
 			}
 		}
 	}
-	return pNewNode;
+	return ERROR;
 }
 
-bool LinklistDeleteElement(LINKLIST *pLinklist, int i, void *pElement, unsigned int nElementSize)
+Status LinklistTraverse(LINKLIST *list, Status(_cdecl *visit)(NODEELEMENT *elem))
 {
-	LINKLIST_NODE *pNode = LinklistFirstNode(pLinklist);
-	int index = 0;
-	bool ret = false;
+	LINKLISTNODE *node = list->header->next;
+	Status status;
 
-	if (i != 0)
+	while (node && (status=visit(&node->elem) != ERROR))
 	{
-		while (pNode && index++ != i - 1)
+		node = node->next;
+	}
+	return status;
+}
+
+Status LinklistGetElem(LINKLIST *list, size_t pos, NODEELEMENT *elem)
+{
+	PLINKLISTNODE node;
+
+	if (LinklistLocatePos(list, pos + 1, &node) == OK)
+	{
+		if (elem->size >= node->elem.size)
 		{
-			pNode = pNode->pNext;
+			memcpy(elem->data, node->elem.data, node->elem.size);
+			elem->size = node->elem.size;
+			return OK;
 		}
 	}
-	if (pNode && pNode->pNext)
+	return ERROR;
+}
+
+size_t LinklistLocate(LINKLIST *list, NODEELEMENT *elem)
+{
+	size_t pos = 0;
+	PLINKLISTNODE node = list->header->next;
+
+	while (node)
 	{
-		if (nElementSize >= pNode->pNext->Element.size)
+		if (list->compareroutine(&node->elem, elem) == 0)
 		{
-			memcpy(pElement, pNode->pNext->Element.data, pNode->pNext->Element.size);
+			return pos;
 		}
-		pLinklist->FreeRoutine(pLinklist, pNode->pNext->Element.data);
-		pNode->pNext = pNode->pNext->pNext;
-		free(pNode->pNext);
-		ret = true;
+		pos++;
+		node = node->next;
 	}
-	return ret;
-}*/
+	return -1;
+}

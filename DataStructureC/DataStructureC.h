@@ -1,16 +1,20 @@
 #pragma once
 
+#include <stdlib.h>
+#include <memory.h>
+
+#ifdef cplusplus
+extern "C"
+{
+#endif // cplusplus
+
 #define	TRUE	1
 #define	FALSE	0
 #define	OK		1
 #define	ERROR	0
 #define	INFEASIBLE	-1
 #define	OVERFLOW	-2
-
-#ifdef cplusplus
-extern "C"
-{
-#endif // cplusplus
+#define	BUFFER_TOO_SMALL	-3
 
 	typedef	int	Status;
 
@@ -27,6 +31,8 @@ extern "C"
 #define	MEM_ALOC(size)			malloc(size)
 #define	MEM_FREE(block)			free(block)
 #define	MEM_REALOC(block, size)	realloc(block,size)
+
+#include "list.h"
 
 #ifdef cplusplus
 }
