@@ -41,5 +41,8 @@
     <ClCompile Include="Linklist.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Polynmail.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

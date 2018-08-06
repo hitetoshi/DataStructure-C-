@@ -164,6 +164,7 @@
   <ItemGroup>
     <ClCompile Include="DataStructureDemo.cpp" />
     <ClCompile Include="Linklist.cpp" />
+    <ClCompile Include="Polynmail.cpp" />
     <ClCompile Include="Sqlist.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

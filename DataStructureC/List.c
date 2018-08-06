@@ -193,6 +193,18 @@ Status SqlistDelete(SQLIST *list, size_t pos, NODEELEMENT *elem)
 	}
 }
 
+Status SqlistTraverse(SQLIST *list, Status(_cdecl *visit)(NODEELEMENT *elem))
+{
+	for (size_t pos = 0; pos < list->length; pos++)
+	{
+		if (visit(list->elem + pos) != OK)
+		{
+			return ERROR;
+		}
+	}
+	return OK;
+}
+
 void SqlistUnio(SQLIST *list1, SQLIST *list2)
 {
 	NODEELEMENT elem;
@@ -376,12 +388,6 @@ Status LinklistInsAfter(LINKLIST *list, PLINKLISTNODE *p, PLINKLISTNODE s)
 {
 	PLINKLISTNODE node = list->header;
 
-	if (node == *p)
-	{
-		*p = s;
-		return LinklistInsFirst(node, s);
-	}
-
 	while (node)
 	{
 		if (node == *p)
@@ -394,6 +400,27 @@ Status LinklistInsAfter(LINKLIST *list, PLINKLISTNODE *p, PLINKLISTNODE s)
 		node = node->next;
 	}
 
+	return INFEASIBLE;
+}
+
+Status LinklistDel(LINKLIST *list, PLINKLISTNODE p, PLINKLISTNODE *q)
+{
+	PLINKLISTNODE node = list->header;
+
+	while(node)
+	{
+		if (node->next == p)
+		{
+			*q = p;
+			node->next = p->next;
+			if (node->next == NULL)
+			{
+				list->tail = node;
+			}
+			return OK;
+		}
+		node = node->next;
+	}
 	return INFEASIBLE;
 }
 
@@ -421,7 +448,7 @@ Status LinklistEmpty(LINKLIST *list)
 	return list->len == 0 ? TRUE : FALSE;
 }
 
-int LinklistLength(LINKLIST *list)
+size_t LinklistLength(LINKLIST *list)
 {
 	return list->len;
 }
@@ -511,6 +538,35 @@ Status LinklistInsert(LINKLIST *list, size_t pos, NODEELEMENT *elem)
 	return ERROR;
 }
 
+Status LinklistDelete(LINKLIST *list, size_t pos, NODEELEMENT *elem)
+{
+	LINKLISTNODE *node;
+
+	if (LinklistLocatePos(list, pos, &node) == OK)
+	{
+		if (LinklistDel(list, node, &node)==OK)
+		{
+			LinklistFreeNode(list->freeroutine, &node);
+			list->len--;
+			return OK;
+		}
+	}
+	return ERROR;
+}
+
+Status LinklistDeletePos(LINKLIST *list, LINKLISTPOSITION pos)
+{
+	LINKLISTNODE *node;
+
+	if (LinklistDel(list, pos, &node) == OK)
+	{
+		LinklistFreeNode(list->freeroutine, &node);
+		list->len--;
+		return OK;
+	}
+	return ERROR;
+}
+
 Status LinklistTraverse(LINKLIST *list, Status(_cdecl *visit)(NODEELEMENT *elem))
 {
 	LINKLISTNODE *node = list->header->next;
@@ -527,7 +583,7 @@ Status LinklistGetElem(LINKLIST *list, size_t pos, NODEELEMENT *elem)
 {
 	PLINKLISTNODE node;
 
-	if (LinklistLocatePos(list, pos + 1, &node) == OK)
+	if (LinklistLocatePos(list, pos, &node) == OK)
 	{
 		if (elem->size >= node->elem.size)
 		{
@@ -539,19 +595,166 @@ Status LinklistGetElem(LINKLIST *list, size_t pos, NODEELEMENT *elem)
 	return ERROR;
 }
 
-size_t LinklistLocate(LINKLIST *list, NODEELEMENT *elem)
+LINKLISTPOSITION LinklistLocateElem(LINKLIST *list, NODEELEMENT *elem)
 {
-	size_t pos = 0;
 	PLINKLISTNODE node = list->header->next;
 
 	while (node)
 	{
 		if (list->compareroutine(&node->elem, elem) == 0)
 		{
-			return pos;
+			return node;
 		}
-		pos++;
 		node = node->next;
 	}
-	return -1;
+	return NULL;
+}
+
+void LinklistUnio(LINKLIST *list1, LINKLIST *list2)
+{
+	LINKLISTNODE *list2_node = list2->header->next;
+	LINKLISTNODE *node;
+	LINKLISTPOSITION tail;
+
+	while (list2_node)
+	{
+		if (!LinklistLocateElem(list1, &list2_node->elem))
+		{
+			if (LinklistMakeNode(list1->allocateroutine, &node, &list2_node->elem) == OK)
+			{
+				tail = LinklistGetLast(list1);
+				if (tail)
+				{
+					if (LinklistInsAfter(list1, &tail, node) == OK)
+					{
+						list1->tail = node;
+						list1->len++;
+					}
+				}
+			}
+		}
+		list2_node = list2_node->next;
+	}
+}
+
+//一元多项式
+
+int __cdecl polyn_compare_routine(NODEELEMENT *firstelem, NODEELEMENT *secondelem)
+{
+	if (firstelem->size == sizeof(POLYN_ELEMENT_DATA) && secondelem->size == sizeof(POLYN_ELEMENT_DATA))
+	{
+		//一元多项式链表按指数从小到大排序
+		//因此两个元素的比较即是指数的比较
+		return ((PPOLYN_ELEMENT_DATA)firstelem->data)->expn - ((PPOLYN_ELEMENT_DATA)secondelem->data)->expn;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+Status LinklistOrderLocalElem(LINKLIST *list, NODEELEMENT *elem, LINKLISTPOSITION *q)
+{
+	LINKLISTNODE *node = list->header;
+	LINKLISTNODE *prior_node = NULL;
+
+	while (node)
+	{
+		if (!prior_node && ((node->next && list->compareroutine(&node->next->elem, elem) >= 0) || node->next==NULL))
+		{
+			prior_node = node;
+		}
+		if (list->compareroutine(&node->elem, elem) == 0)
+		{
+			*q = node;
+			return TRUE;
+		}
+		node = node->next;
+	}
+	*q = prior_node;
+	return FALSE;
+}
+
+Status PolynCreate(POLYNOMAIL *polynmail, int m, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine)
+{
+	LINKLISTNODE *h;
+	NODEELEMENT elem;
+	LINKLISTNODE *q;
+	LINKLISTNODE *new_node;
+	POLYN_ELEMENT_DATA elem_data;
+	int i;
+	int r;
+	char ch[100];
+
+	if (LinklistInit(polynmail, polyn_compare_routine, allocateroutine, freeroutine) == OK)
+	{
+		h = LinklistHeader(polynmail);
+		h->elem.size = sizeof(POLYN_ELEMENT_DATA);
+		h->elem.data = allocateroutine(sizeof(POLYN_ELEMENT_DATA));
+		if (h->elem.data)
+		{
+			elem.size = sizeof(POLYN_ELEMENT_DATA);
+			elem.data = &elem_data;
+			elem_data.coef = 0.0;
+			elem_data.expn = -1;
+			if (LinklistSetCurElem(&h, &elem) == OK)
+			{
+				for (i = 0; i < m; i++)
+				{
+					printf("输入第 %d 项系数和指数(逗号分隔): ", i);
+					elem_data.coef = 0;
+					elem_data.expn = -1;
+					r=scanf_s("%f,%d", &elem_data.coef,&elem_data.expn);
+					if (r != 2)
+					{
+						printf("输入的数据有误,请重新输入\n");
+						scanf_s("%s", ch,100);
+						i--;
+					}
+					else
+					{
+						q = NULL;
+						if (LinklistOrderLocalElem(polynmail, &elem, &q))
+						{
+							printf("具有 %d 次系数的项已经存在,请重新输入\n",elem_data.expn);
+							
+							i--;
+						}
+						else if(q)
+						{
+							if (LinklistMakeNode(polynmail->allocateroutine, &new_node, &elem) == OK)
+							{
+								if (LinklistInsFirst(q, new_node) == OK)
+								{
+									if (new_node->next == NULL)
+									{
+										polynmail->tail = new_node;
+									}
+									polynmail->len++;
+								}
+							}
+						}
+					}
+				}
+				return OK;
+			}
+		}
+		LinklistDestroy(polynmail);
+	}
+	return ERROR;
+}
+
+void PolynPrint(POLYNOMAIL *polynmail)
+{
+	LINKLISTNODE *node = polynmail->header->next;
+
+	while (node)
+	{
+		printf("%.2fx^%d + ",((POLYN_ELEMENT_DATA *)(node->elem.data))->coef, ((POLYN_ELEMENT_DATA *)(node->elem.data))->expn);
+		node = node->next;
+	}
+	if (polynmail->header->next)
+	{
+		printf("\b\b  ");
+	}
 }

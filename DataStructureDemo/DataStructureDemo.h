@@ -13,4 +13,5 @@ int RangeRandom(int range_min, int range_max);
 
 void ShowSqlist();
 void ShowLinklist();
+void ShowPolynmail();
 
