@@ -21,12 +21,18 @@
     <ClCompile Include="List.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Stack.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="List.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DataStructureC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Stack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

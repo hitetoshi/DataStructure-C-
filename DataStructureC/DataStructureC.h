@@ -19,13 +19,13 @@ extern "C"
 
 	typedef	int	Status;
 
-	typedef	struct _NODEELEMENT
+	typedef	struct _ELEMENTNODE
 	{
 		void *data;
 		size_t size;
-	}NODEELEMENT, *PNODEELEMENT;
+	}ELEMENTNODE, *PELEMENTNODE;
 
-	typedef	int (__cdecl *PCOMPAREROUTINE)(NODEELEMENT *firstelem, NODEELEMENT *secondelem);
+	typedef	int (__cdecl *PCOMPAREROUTINE)(ELEMENTNODE *firstelem, ELEMENTNODE *secondelem);
 	typedef	void * (__cdecl *PALLOCATEROUTINE)(size_t bytesize);
 	typedef	void(__cdecl *PFREEROUTINE)(void *buffer);
 
@@ -34,6 +34,7 @@ extern "C"
 #define	MEM_REALOC(block, size)	realloc(block,size)
 
 #include "list.h"
+#include "Stack.h"
 
 #ifdef cplusplus
 }

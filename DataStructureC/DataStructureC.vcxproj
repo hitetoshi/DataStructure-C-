@@ -139,10 +139,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="List.c" />
+    <ClCompile Include="Stack.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DataStructureC.h" />
     <ClInclude Include="List.h" />
+    <ClInclude Include="Stack.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

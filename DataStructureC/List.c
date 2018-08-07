@@ -2,10 +2,10 @@
 
 Status SqlistInit(SQLIST *list, PCOMPAREROUTINE compareroutine, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine)
 {
-	list->elem = MEM_ALOC(LIST_INIT_SIZE*sizeof(NODEELEMENT));
+	list->elem = MEM_ALOC(LIST_INIT_SIZE*sizeof(ELEMENTNODE));
 	if (list->elem)
 	{
-		memset(list->elem, 0, LIST_INIT_SIZE * sizeof(NODEELEMENT));
+		memset(list->elem, 0, LIST_INIT_SIZE * sizeof(ELEMENTNODE));
 		list->length = 0;
 		list->listsize = LIST_INIT_SIZE;
 		list->compareroutine = compareroutine;
@@ -19,10 +19,10 @@ Status SqlistInit(SQLIST *list, PCOMPAREROUTINE compareroutine, PALLOCATEROUTINE
 	}
 }
 
-Status SqlistInsert(SQLIST *list, size_t pos, NODEELEMENT *elem)
+Status SqlistInsert(SQLIST *list, size_t pos, ELEMENTNODE *elem)
 {
-	NODEELEMENT *new_base;
-	NODEELEMENT *p;
+	ELEMENTNODE *new_base;
+	ELEMENTNODE *p;
 	void *new_node_data;
 
 	if (pos<0 || pos > list->length)
@@ -31,11 +31,11 @@ Status SqlistInsert(SQLIST *list, size_t pos, NODEELEMENT *elem)
 	}
 	if (list->length >= list->listsize)
 	{
-		new_base = MEM_REALOC(list->elem, (list->length + LIST_INCREMENT) * sizeof(NODEELEMENT));
+		new_base = MEM_REALOC(list->elem, (list->length + LIST_INCREMENT) * sizeof(ELEMENTNODE));
 		if (new_base)
 		{
 			list->elem = new_base;
-			memset(list->elem + list->listsize, 0, sizeof(NODEELEMENT) * LIST_INCREMENT);
+			memset(list->elem + list->listsize, 0, sizeof(ELEMENTNODE) * LIST_INCREMENT);
 			list->listsize += LIST_INCREMENT;
 		}
 		else
@@ -48,7 +48,7 @@ Status SqlistInsert(SQLIST *list, size_t pos, NODEELEMENT *elem)
 	{
 		memcpy(new_node_data, elem->data, elem->size);
 
-		////时间复杂度:T(n)=O(n)
+		////时间复杂度:O(list->length)
 		for (p = list->elem + list->length - 1; p >= list->elem + pos; p--)
 		{
 			*(p + 1) = *p;
@@ -65,7 +65,7 @@ Status SqlistInsert(SQLIST *list, size_t pos, NODEELEMENT *elem)
 	return OK;
 }
 
-Status SqlistOrderInsert(SQLIST *list, NODEELEMENT *elem)
+Status SqlistOrderInsert(SQLIST *list, ELEMENTNODE *elem)
 {
 	size_t pos = SqlistOrderLocate(list, elem);
 
@@ -74,7 +74,7 @@ Status SqlistOrderInsert(SQLIST *list, NODEELEMENT *elem)
 
 void SqlistDestroy(SQLIST *list)
 {
-	//T(n)=O(n)
+	//O(list->length)
 	//由SqlistClear决定
 	SqlistClear(list);
 	MEM_FREE(list->elem);
@@ -84,7 +84,7 @@ void SqlistDestroy(SQLIST *list)
 
 void SqlistClear(SQLIST *list)
 {
-	//T(n)=O(n)
+	//O(list->length)
 	while(list->length)
 	{
 		if (list->elem[0].data)
@@ -107,9 +107,9 @@ size_t SqlistLength(SQLIST *list)
 	return list->length;
 }
 
-Status SqlistGetElem(SQLIST *list, size_t pos, NODEELEMENT *elem)
+Status SqlistGetElem(SQLIST *list, size_t pos, ELEMENTNODE *elem)
 {
-	//T(n)=O(1)
+	//O(1)
 	if (pos >= 0 && pos < list->length)
 	{
 		elem->data = list->elem[pos].data;
@@ -122,11 +122,11 @@ Status SqlistGetElem(SQLIST *list, size_t pos, NODEELEMENT *elem)
 	}
 }
 
-size_t SqlistLocate(SQLIST *list, NODEELEMENT *elem)
+size_t SqlistLocate(SQLIST *list, ELEMENTNODE *elem)
 {
 	size_t pos;
 
-	//T(n)=O(n)
+	//O(list->length)
 	for (pos = 0; pos < list->length; pos++)
 	{
 		if (list->compareroutine(elem, list->elem + pos) == 0)
@@ -137,11 +137,11 @@ size_t SqlistLocate(SQLIST *list, NODEELEMENT *elem)
 	return -1;
 }
 
-size_t SqlistOrderLocate(SQLIST *list, NODEELEMENT *elem)
+size_t SqlistOrderLocate(SQLIST *list, ELEMENTNODE *elem)
 {
 	size_t pos;
 
-	//T(n)=O(n)
+	//O(list->length)
 	for (pos = 0; pos < list->length; pos++)
 	{
 		if (list->compareroutine(elem, list->elem + pos) <= 0)
@@ -152,9 +152,9 @@ size_t SqlistOrderLocate(SQLIST *list, NODEELEMENT *elem)
 	return pos;
 }
 
-Status SqlistPriorElem(SQLIST *list, NODEELEMENT *elem, NODEELEMENT *pre_elem)
+Status SqlistPriorElem(SQLIST *list, ELEMENTNODE *elem, ELEMENTNODE *pre_elem)
 {
-	//T(n)=O(n)
+	//O(list->length)
 	size_t pos = SqlistLocate(list, elem);
 	if (pos != -1 && pos > 0)
 	{
@@ -168,9 +168,9 @@ Status SqlistPriorElem(SQLIST *list, NODEELEMENT *elem, NODEELEMENT *pre_elem)
 	}
 }
 
-Status SqlistNextElem(SQLIST *list, NODEELEMENT *elem, NODEELEMENT *pre_elem)
+Status SqlistNextElem(SQLIST *list, ELEMENTNODE *elem, ELEMENTNODE *pre_elem)
 {
-	//T(n)=O(n)
+	//O(list->length)
 	size_t pos = SqlistLocate(list, elem);
 
 	if (pos >= 0 && pos < list->length - 1)
@@ -185,9 +185,9 @@ Status SqlistNextElem(SQLIST *list, NODEELEMENT *elem, NODEELEMENT *pre_elem)
 	}
 }
 
-Status SqlistDelete(SQLIST *list, size_t pos, NODEELEMENT *elem)
+Status SqlistDelete(SQLIST *list, size_t pos, ELEMENTNODE *elem)
 {
-	NODEELEMENT *p;
+	ELEMENTNODE *p;
 	if (pos >= 0 && pos < list->length)
 	{
 		if (elem->size >= list->elem[pos].size)
@@ -196,7 +196,7 @@ Status SqlistDelete(SQLIST *list, size_t pos, NODEELEMENT *elem)
 			elem->size = list->elem[pos].size;
 			list->freeroutine(list->elem[pos].data);
 
-			//T(n)=O(n)
+			//O(list->length)
 			for (p = list->elem + pos; p < list->elem + list->length - 1; p++)
 			{
 				*p = *(p + 1);
@@ -215,7 +215,7 @@ Status SqlistDelete(SQLIST *list, size_t pos, NODEELEMENT *elem)
 	}
 }
 
-Status SqlistTraverse(SQLIST *list, Status(_cdecl *visit)(NODEELEMENT *elem))
+Status SqlistTraverse(SQLIST *list, Status(_cdecl *visit)(ELEMENTNODE *elem))
 {
 	for (size_t pos = 0; pos < list->length; pos++)
 	{
@@ -229,9 +229,9 @@ Status SqlistTraverse(SQLIST *list, Status(_cdecl *visit)(NODEELEMENT *elem))
 
 void SqlistUnio(SQLIST *list1, SQLIST *list2)
 {
-	NODEELEMENT elem;
+	ELEMENTNODE elem;
 
-	//T(n)=O(list2->length*list1->length)
+	//O(list2->length*list1->length)
 	for (size_t pos = 0; pos < list2->length; pos++)
 	{
 		if (SqlistGetElem(list2, pos, &elem) == OK)
@@ -246,18 +246,19 @@ void SqlistUnio(SQLIST *list1, SQLIST *list2)
 
 Status SqlistMerge(SQLIST *la, SQLIST *lb, SQLIST *lc)
 {
-	NODEELEMENT *pa, *pb;
-	NODEELEMENT *new_node_base;
+	ELEMENTNODE *pa, *pb;
+	ELEMENTNODE *new_node_base;
 
 	SqlistClear(lc);
 	lc->listsize = la->length + lb->length;
 	lc->length = 0;
-	new_node_base = MEM_REALOC(lc->elem, lc->listsize * sizeof(NODEELEMENT));
+	new_node_base = MEM_REALOC(lc->elem, lc->listsize * sizeof(ELEMENTNODE));
 	if (new_node_base)
 	{
 		lc->elem = new_node_base;
 		pa = la->elem;
 		pb = lb->elem;
+		//O(la->length+lb->length）
 		while (pa < la->elem + la->length && pb < lb->elem + lb->length)
 		{
 			//与教材算法2.7不同,因本例线性表的元素类型与教材不同
@@ -279,7 +280,7 @@ Status SqlistMerge(SQLIST *la, SQLIST *lb, SQLIST *lc)
 
 //Linklist
 
-Status LinklistMakeNode(PALLOCATEROUTINE allocateroutine, PLINKLISTNODE *p, NODEELEMENT *elem)
+Status LinklistMakeNode(PALLOCATEROUTINE allocateroutine, PLINKLISTNODE *p, ELEMENTNODE *elem)
 {
 	*p = MEM_ALOC(sizeof(LINKLISTNODE));
 	if (*p)
@@ -341,7 +342,7 @@ void LinklistClear(LINKLIST *list)
 	LINKLISTNODE *header = LinklistHeader(list);
 	LINKLISTNODE *node = header->next;
 	LINKLISTNODE *next;
-	//T(n)=O(n)
+	//O(list->length)
 	while (node)
 	{
 		next = node->next;
@@ -479,7 +480,7 @@ Status LinklistDel(LINKLIST *list, PLINKLISTNODE p, PLINKLISTNODE *q)
 	return INFEASIBLE;
 }
 
-Status LinklistSetCurElem(PLINKLISTNODE *p, NODEELEMENT *elem)
+Status LinklistSetCurElem(PLINKLISTNODE *p, ELEMENTNODE *elem)
 {
 	if ((*p)->elem.size >= elem->size)
 	{
@@ -493,7 +494,7 @@ Status LinklistSetCurElem(PLINKLISTNODE *p, NODEELEMENT *elem)
 	}
 }
 
-NODEELEMENT *LinklistGetCurElem(PLINKLISTNODE p)
+ELEMENTNODE *LinklistGetCurElem(PLINKLISTNODE p)
 {
 	return &(p->elem);
 }
@@ -522,6 +523,7 @@ LINKLISTPOSITION LinklistPriorPos(LINKLIST *list, PLINKLISTNODE p)
 {
 	LINKLISTNODE *node = list->header;
 
+	//O(list->length)
 	while (node)
 	{
 		if (node->next == p)
@@ -547,6 +549,7 @@ LINKLISTPOSITION LinklistNextPos(LINKLIST *list, PLINKLISTNODE p)
 	}
 	return NULL;*/
 
+	//O(1)
 	return p->next;
 }
 
@@ -568,7 +571,7 @@ Status LinklistLocatePos(LINKLIST *list, size_t i, PLINKLISTNODE *p)
 	return INFEASIBLE;
 }
 
-Status LinklistInsert(LINKLIST *list, size_t pos, NODEELEMENT *elem)
+Status LinklistInsert(LINKLIST *list, size_t pos, ELEMENTNODE *elem)
 {
 	LINKLISTNODE *node;
 	LINKLISTNODE *new_node;
@@ -595,7 +598,7 @@ Status LinklistInsert(LINKLIST *list, size_t pos, NODEELEMENT *elem)
 	return ERROR;
 }
 
-Status LinklistDelete(LINKLIST *list, size_t pos, NODEELEMENT *elem)
+Status LinklistDelete(LINKLIST *list, size_t pos, ELEMENTNODE *elem)
 {
 	LINKLISTNODE *node;
 
@@ -624,7 +627,7 @@ Status LinklistDeletePos(LINKLIST *list, LINKLISTPOSITION pos)
 	return ERROR;
 }
 
-Status LinklistTraverse(LINKLIST *list, Status(_cdecl *visit)(NODEELEMENT *elem))
+Status LinklistTraverse(LINKLIST *list, Status(_cdecl *visit)(ELEMENTNODE *elem))
 {
 	LINKLISTNODE *node = list->header->next;
 	Status status;
@@ -636,7 +639,7 @@ Status LinklistTraverse(LINKLIST *list, Status(_cdecl *visit)(NODEELEMENT *elem)
 	return status;
 }
 
-Status LinklistGetElem(LINKLIST *list, size_t pos, NODEELEMENT *elem)
+Status LinklistGetElem(LINKLIST *list, size_t pos, ELEMENTNODE *elem)
 {
 	PLINKLISTNODE node;
 
@@ -652,7 +655,7 @@ Status LinklistGetElem(LINKLIST *list, size_t pos, NODEELEMENT *elem)
 	return ERROR;
 }
 
-LINKLISTPOSITION LinklistLocateElem(LINKLIST *list, NODEELEMENT *elem)
+LINKLISTPOSITION LinklistLocateElem(LINKLIST *list, ELEMENTNODE *elem)
 {
 	PLINKLISTNODE node = list->header->next;
 
@@ -697,7 +700,7 @@ void LinklistUnio(LINKLIST *list1, LINKLIST *list2)
 void LinklistMerge(LINKLIST *la, LINKLIST *lb, LINKLIST *lc)
 {
 	LINKLISTNODE *ha, *hb, *pa, *pb;
-	NODEELEMENT *ea, *eb;
+	ELEMENTNODE *ea, *eb;
 	PLINKLISTNODE q;
 	
 	ha = LinklistHeader(la);
@@ -744,13 +747,13 @@ void LinklistMerge(LINKLIST *la, LINKLIST *lb, LINKLIST *lc)
 
 //一元多项式
 
-int __cdecl polyn_compare_routine(NODEELEMENT *firstelem, NODEELEMENT *secondelem)
+int __cdecl polyn_compare_routine(ELEMENTNODE *firstelem, ELEMENTNODE *secondelem)
 {
 	return (firstelem->size == sizeof(POLYN_ELEMENT_DATA) && secondelem->size == sizeof(POLYN_ELEMENT_DATA)) ?
 		((PPOLYN_ELEMENT_DATA)firstelem->data)->expn - ((PPOLYN_ELEMENT_DATA)secondelem->data)->expn : -1;
 }
 
-Status LinklistOrderLocalElem(LINKLIST *list, NODEELEMENT *elem, LINKLISTPOSITION *q)
+Status LinklistOrderLocalElem(LINKLIST *list, ELEMENTNODE *elem, LINKLISTPOSITION *q)
 {
 	LINKLISTNODE *node = list->header;
 	LINKLISTNODE *prior_node = NULL;
@@ -772,7 +775,7 @@ Status LinklistOrderLocalElem(LINKLIST *list, NODEELEMENT *elem, LINKLISTPOSITIO
 	return FALSE;
 }
 
-Status LinklistOrderInsert(LINKLIST *list, NODEELEMENT *elem)
+Status LinklistOrderInsert(LINKLIST *list, ELEMENTNODE *elem)
 {
 	LINKLISTNODE *q;
 	LINKLISTNODE *new_node;
@@ -799,7 +802,7 @@ Status LinklistOrderInsert(LINKLIST *list, NODEELEMENT *elem)
 
 Status PolynCreate(POLYNOMAIL *polynmail, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine)
 {
-	NODEELEMENT elem;
+	ELEMENTNODE elem;
 	POLYN_ELEMENT_DATA elem_data;
 
 	if (LinklistInit(polynmail, polyn_compare_routine, allocateroutine, freeroutine) == OK)
@@ -829,9 +832,9 @@ void PolynDestroy(POLYNOMAIL *polynmail)
 	LinklistDestroy(polynmail);
 }
 
-Status PolynAddItem(POLYNOMAIL *polynmail, POLYN_ELEMENT_DATA *items, int item_count)
+Status PolynAddMonos(POLYNOMAIL *polynmail, POLYN_ELEMENT_DATA *items, int item_count)
 {
-	NODEELEMENT elem;
+	ELEMENTNODE elem;
 	PLINKLISTNODE new_node;
 	LINKLISTPOSITION q;
 
@@ -867,7 +870,7 @@ void PolynAdd(POLYNOMAIL *pa, POLYNOMAIL *pb)
 {
 	LINKLISTNODE *ha, *hb;
 	LINKLISTPOSITION qa, qb, next_qa,next_qb;
-	NODEELEMENT *a, *b;
+	ELEMENTNODE *a, *b;
 	int res;
 	POLYN_ELEMENT_DATA sum;
 
@@ -978,8 +981,8 @@ void PolynMultiMono(POLYNOMAIL *p, POLYN_ELEMENT_DATA *mono)
 void PolynMulti(POLYNOMAIL *pa, POLYNOMAIL *pb, POLYNOMAIL *pc)
 {
 	LINKLISTPOSITION qa = LinklistNextPos(pa, LinklistHeader(pa));
-	LINKLISTPOSITION qb = LinklistNextPos(pb, LinklistHeader(pb));
-	NODEELEMENT *a, *b;
+	LINKLISTPOSITION qb;
+	ELEMENTNODE *a, *b;
 	POLYN_ELEMENT_DATA v;
 	
 	LinklistClear(pc);
@@ -988,12 +991,14 @@ void PolynMulti(POLYNOMAIL *pa, POLYNOMAIL *pb, POLYNOMAIL *pc)
 	while (qa)
 	{
 		a = LinklistGetCurElem(qa);
+		qb = LinklistNextPos(pb, LinklistHeader(pb));
+
 		while (qb)
 		{
 			b = LinklistGetCurElem(qb);
 			v.coef = ((POLYN_ELEMENT_DATA *)a->data)->coef * ((POLYN_ELEMENT_DATA *)b->data)->coef;
 			v.expn= ((POLYN_ELEMENT_DATA *)a->data)->expn + ((POLYN_ELEMENT_DATA *)b->data)->expn;
-			PolynAddItem(pc, &v, 1);
+			PolynAddMonos(pc, &v, 1);
 			qb = qb->next;
 		}
 		qa = qa->next;

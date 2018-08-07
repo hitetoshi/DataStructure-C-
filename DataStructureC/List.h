@@ -1,6 +1,5 @@
 #pragma once
 
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -12,38 +11,37 @@ extern "C"
 	//线性顺序表
 	typedef	struct _SQLIST
 	{
-		NODEELEMENT *elem;					//存储空间基址
+		ELEMENTNODE *elem;					//存储空间基址
 		size_t length;						//当前长度
 		size_t listsize;					//当前分配的存储容量
 		PCOMPAREROUTINE compareroutine;		//比较函数
 		PALLOCATEROUTINE allocateroutine;	//内存分配函数
 		PFREEROUTINE freeroutine;			//内存释放函数
-
 	}SQLIST, *PSQLIST;
 
 	Status SqlistInit(SQLIST *list, PCOMPAREROUTINE compareroutine, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine);
-	Status SqlistInsert(SQLIST *list, size_t pos, NODEELEMENT *elem);
+	Status SqlistInsert(SQLIST *list, size_t pos, ELEMENTNODE *elem);
 	//有序插入
-	Status SqlistOrderInsert(SQLIST *list, NODEELEMENT *elem);
+	Status SqlistOrderInsert(SQLIST *list, ELEMENTNODE *elem);
 	void SqlistDestroy(SQLIST *list);
 	void SqlistClear(SQLIST *list);
 	Status SqlistEmpty(SQLIST *list);
 	size_t SqlistLength(SQLIST *list);
-	Status SqlistGetElem(SQLIST *list, size_t pos, NODEELEMENT *elem);
-	size_t SqlistLocate(SQLIST *list, NODEELEMENT *elem);
+	Status SqlistGetElem(SQLIST *list, size_t pos, ELEMENTNODE *elem);
+	size_t SqlistLocate(SQLIST *list, ELEMENTNODE *elem);
 	//为实现有序顺序表增加的函数返回大于elem的第一个元素的位置
-	size_t SqlistOrderLocate(SQLIST *list, NODEELEMENT *elem);
-	Status SqlistPriorElem(SQLIST *list, NODEELEMENT *elem, NODEELEMENT *pre_elem);
-	Status SqlistNextElem(SQLIST *list, NODEELEMENT *elem, NODEELEMENT *pre_elem);
-	Status SqlistDelete(SQLIST *list, size_t pos, NODEELEMENT *elem);
-	Status SqlistTraverse(SQLIST *list, Status(_cdecl *visit)(NODEELEMENT *elem));
+	size_t SqlistOrderLocate(SQLIST *list, ELEMENTNODE *elem);
+	Status SqlistPriorElem(SQLIST *list, ELEMENTNODE *elem, ELEMENTNODE *pre_elem);
+	Status SqlistNextElem(SQLIST *list, ELEMENTNODE *elem, ELEMENTNODE *pre_elem);
+	Status SqlistDelete(SQLIST *list, size_t pos, ELEMENTNODE *elem);
+	Status SqlistTraverse(SQLIST *list, Status(_cdecl *visit)(ELEMENTNODE *elem));
 	void SqlistUnio(SQLIST *list1, SQLIST *list2);
 	Status SqlistMerge(SQLIST *la, SQLIST *lb, SQLIST *lc);
 
 	//线性链表
 	typedef	struct _LINKLIST_NODE
 	{
-		NODEELEMENT elem;
+		ELEMENTNODE elem;
 		struct _LINKLIST_NODE *next;
 	}LINKLISTNODE, *PLINKLISTNODE, *LINKLISTPOSITION;
 
@@ -56,7 +54,7 @@ extern "C"
 		PFREEROUTINE freeroutine;			//内存释放函数
 	}LINKLIST,*PLINKLIST;
 
-	Status LinklistMakeNode(PALLOCATEROUTINE allocateroutine, PLINKLISTNODE *p, NODEELEMENT *elem);
+	Status LinklistMakeNode(PALLOCATEROUTINE allocateroutine, PLINKLISTNODE *p, ELEMENTNODE *elem);
 	Status LinklistFreeNode(PFREEROUTINE freeroutine, PLINKLISTNODE *p);
 	Status LinklistInit(LINKLIST *list, PCOMPAREROUTINE compareroutine, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine);
 	void LinklistClear(LINKLIST *list);
@@ -74,12 +72,12 @@ extern "C"
 	Status LinklistDel(LINKLIST *list, PLINKLISTNODE p, PLINKLISTNODE *q);
 
 	//与Sqlist类似的一组操作,对节点元素实际分配和释放节点内存,再调用上面一组函数做节点的插入删除操作
-	Status LinklistInsert(LINKLIST *list, size_t pos, NODEELEMENT *elem);
-	Status LinklistDelete(LINKLIST *list, size_t pos, NODEELEMENT *elem);
+	Status LinklistInsert(LINKLIST *list, size_t pos, ELEMENTNODE *elem);
+	Status LinklistDelete(LINKLIST *list, size_t pos, ELEMENTNODE *elem);
 	Status LinklistDeletePos(LINKLIST *list, LINKLISTPOSITION pos);
 
-	Status LinklistSetCurElem(PLINKLISTNODE *p, NODEELEMENT *elem);
-	NODEELEMENT *LinklistGetCurElem(PLINKLISTNODE p);
+	Status LinklistSetCurElem(PLINKLISTNODE *p, ELEMENTNODE *elem);
+	ELEMENTNODE *LinklistGetCurElem(PLINKLISTNODE p);
 	Status LinklistEmpty(LINKLIST *list);
 	size_t LinklistLength(LINKLIST *list);
 	LINKLISTPOSITION LinklistHeader(LINKLIST *list);
@@ -87,8 +85,8 @@ extern "C"
 	LINKLISTPOSITION LinklistPriorPos(LINKLIST *list, PLINKLISTNODE p);
 	LINKLISTPOSITION LinklistNextPos(LINKLIST *list, PLINKLISTNODE p);
 	Status LinklistLocatePos(LINKLIST *list, size_t i, PLINKLISTNODE *p);
-	LINKLISTPOSITION LinklistLocateElem(LINKLIST *list, NODEELEMENT *elem);
-	Status LinklistTraverse(LINKLIST *list, Status(_cdecl *visit)(NODEELEMENT *elem));
+	LINKLISTPOSITION LinklistLocateElem(LINKLIST *list, ELEMENTNODE *elem);
+	Status LinklistTraverse(LINKLIST *list, Status(_cdecl *visit)(ELEMENTNODE *elem));
 	void LinklistUnio(LINKLIST *list1, LINKLIST *list2);
 	//本例对教材算法2.21作了一些修改
 	//首先若在LinklistMerge函数内部初始化lc(分配内存),则需要主调函数调用LinklistDestroy(lc)将其释放
@@ -102,8 +100,8 @@ extern "C"
 
 	/*一元多项式的元素数据类型
 	在通用节点类型中
-	NODEELEMENT.data设置为指向POLYN_ELEMENT_DATA结构的指针
-	NODEELEMENT.size=sizeof(POLYN_ELEMENT_DATA)即可*/
+	ELEMENTNODE.data设置为指向POLYN_ELEMENT_DATA结构的指针
+	ELEMENTNODE.size=sizeof(POLYN_ELEMENT_DATA)即可*/
 	typedef	struct _POLYN_ELEMENT_DATA
 	{
 		float coef;		//系数
@@ -111,16 +109,16 @@ extern "C"
 	}POLYN_ELEMENT_DATA,*PPOLYN_ELEMENT_DATA;
 
 	//一元多项式链表元素值比较函数
-	int __cdecl polyn_compare_routine(NODEELEMENT *firstelem, NODEELEMENT *secondelem);
+	int __cdecl polyn_compare_routine(ELEMENTNODE *firstelem, ELEMENTNODE *secondelem);
 
-	//本例对教材作了修改,没有采用一项一项手工输入的方式初始化多项式而采用PolynAddItem添加项
-	//调用者可以让用户手工输入各项次数和系数后调用PolynAddItem产生多项式,也可以随机生成或通过其他方式
+	//本例对教材作了修改,没有采用一项一项手工输入的方式初始化多项式而采用PolynAddMonos添加项
+	//调用者可以让用户手工输入各项次数和系数后调用PolynAddMonos产生多项式,也可以随机生成或通过其他方式
 	//产生多项式的项
 	Status PolynCreate(POLYNOMAIL *polynmail, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine);
 	void PolynDestroy(POLYNOMAIL *polynmail);
-	//已知一元多项式polynmail存在,向其中添加item_count个项,若具有相同次数的项已经存在,则
-	//将其系数相加存入polynmail
-	Status PolynAddItem(POLYNOMAIL *polynmail, POLYN_ELEMENT_DATA *items, int item_count);
+	//已知一元多项式polynmail存在,items中存放item_count个单项式,将多项式polynmail依次与items中的单项式相加,
+	//结果存入polynmail
+	Status PolynAddMonos(POLYNOMAIL *polynmail, POLYN_ELEMENT_DATA *items, int item_count);
 	//根据"谁分配谁释放"的原则,本例PolynAdd函数不销毁pb,主调函数负责销毁
 	void PolynAdd(POLYNOMAIL *pa, POLYNOMAIL *pb);
 	void PolynSubtract(POLYNOMAIL *pa, POLYNOMAIL *pb);
@@ -133,11 +131,11 @@ extern "C"
 	void PolynPrint(POLYNOMAIL *polynmail);
 
 	//教材特别说明的有序链表与基本链表不同职能的LocalElem和增加的OrderInsert
-	Status LinklistOrderLocalElem(LINKLIST *list, NODEELEMENT *elem, LINKLISTPOSITION *q);
+	Status LinklistOrderLocalElem(LINKLIST *list, ELEMENTNODE *elem, LINKLISTPOSITION *q);
 	//教材中对本操作的描述为满足compare()==0时q指示第一个值为elem的节点位置并返回TRUE;
 	//否则q指示第一个与elem满足判定函数compare()>0的元素的前驱的位置并返回FALSE
 	//但根据教材算法2.22的描述,考虑计划插入的元素大于有序链表中所有元素,应补充若上述条件都不满足时,q指示尾节点并返回FALSE
-	Status LinklistOrderInsert(LINKLIST *list, NODEELEMENT *elem);
+	Status LinklistOrderInsert(LINKLIST *list, ELEMENTNODE *elem);
 
 
 #ifdef __cplusplus
