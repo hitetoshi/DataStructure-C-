@@ -23,18 +23,22 @@ extern "C"
 
 	Status SqlistInit(SQLIST *list, PCOMPAREROUTINE compareroutine, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine);
 	Status SqlistInsert(SQLIST *list, size_t pos, NODEELEMENT *elem);
+	//有序插入
+	Status SqlistOrderInsert(SQLIST *list, NODEELEMENT *elem);
 	void SqlistDestroy(SQLIST *list);
 	void SqlistClear(SQLIST *list);
 	Status SqlistEmpty(SQLIST *list);
 	size_t SqlistLength(SQLIST *list);
 	Status SqlistGetElem(SQLIST *list, size_t pos, NODEELEMENT *elem);
 	size_t SqlistLocate(SQLIST *list, NODEELEMENT *elem);
+	//为实现有序顺序表增加的函数返回大于elem的第一个元素的位置
+	size_t SqlistOrderLocate(SQLIST *list, NODEELEMENT *elem);
 	Status SqlistPriorElem(SQLIST *list, NODEELEMENT *elem, NODEELEMENT *pre_elem);
 	Status SqlistNextElem(SQLIST *list, NODEELEMENT *elem, NODEELEMENT *pre_elem);
 	Status SqlistDelete(SQLIST *list, size_t pos, NODEELEMENT *elem);
 	Status SqlistTraverse(SQLIST *list, Status(_cdecl *visit)(NODEELEMENT *elem));
 	void SqlistUnio(SQLIST *list1, SQLIST *list2);
-
+	Status SqlistMerge(SQLIST *la, SQLIST *lb, SQLIST *lc);
 
 	//线性链表
 	typedef	struct _LINKLIST_NODE
@@ -86,6 +90,11 @@ extern "C"
 	LINKLISTPOSITION LinklistLocateElem(LINKLIST *list, NODEELEMENT *elem);
 	Status LinklistTraverse(LINKLIST *list, Status(_cdecl *visit)(NODEELEMENT *elem));
 	void LinklistUnio(LINKLIST *list1, LINKLIST *list2);
+	//本例对教材算法2.21作了一些修改
+	//首先若在LinklistMerge函数内部初始化lc(分配内存),则需要主调函数调用LinklistDestroy(lc)将其释放
+	//这不符合"谁分配谁释放"原则,因此本例要求传入的lc是已经调用LinklistInit的链表
+	//同时也不释放la和lb的头结点,由调用函数自行销毁
+	void LinklistMerge(LINKLIST *la, LINKLIST *lb, LINKLIST *lc);
 
 	//一元多项式
 	typedef	LINKLIST	POLYNOMAIL;
@@ -104,7 +113,23 @@ extern "C"
 	//一元多项式链表元素值比较函数
 	int __cdecl polyn_compare_routine(NODEELEMENT *firstelem, NODEELEMENT *secondelem);
 
-	Status PolynCreate(POLYNOMAIL *polynmail, int m, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine);
+	//本例对教材作了修改,没有采用一项一项手工输入的方式初始化多项式而采用PolynAddItem添加项
+	//调用者可以让用户手工输入各项次数和系数后调用PolynAddItem产生多项式,也可以随机生成或通过其他方式
+	//产生多项式的项
+	Status PolynCreate(POLYNOMAIL *polynmail, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine);
+	void PolynDestroy(POLYNOMAIL *polynmail);
+	//已知一元多项式polynmail存在,向其中添加item_count个项,若具有相同次数的项已经存在,则
+	//将其系数相加存入polynmail
+	Status PolynAddItem(POLYNOMAIL *polynmail, POLYN_ELEMENT_DATA *items, int item_count);
+	//根据"谁分配谁释放"的原则,本例PolynAdd函数不销毁pb,主调函数负责销毁
+	void PolynAdd(POLYNOMAIL *pa, POLYNOMAIL *pb);
+	void PolynSubtract(POLYNOMAIL *pa, POLYNOMAIL *pb);
+	//一元多项式p存在,将p乘以常数constant
+	void PolynMultiConstant(POLYNOMAIL *p, float constant);
+	//一元多项式p存在,将p乘以单项式mono
+	void PolynMultiMono(POLYNOMAIL *p, POLYN_ELEMENT_DATA *mono);
+	//一元多项式pa和pb存在,将pa和pb相乘,结果存放于pc
+	void PolynMulti(POLYNOMAIL *pa, POLYNOMAIL *pb, POLYNOMAIL *pc);
 	void PolynPrint(POLYNOMAIL *polynmail);
 
 	//教材特别说明的有序链表与基本链表不同职能的LocalElem和增加的OrderInsert

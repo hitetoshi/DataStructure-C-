@@ -12,37 +12,74 @@ Status __cdecl linklist_print_value(NODEELEMENT *elem)
 	return OK;
 }
 
-void ShowLinklist()
+bool InitOrderLinklist(LINKLIST *list, int length)
 {
-	LINKLIST linklist1, linklist2;
-	Status status;
-	int structure_length;
+	bool ret = false;
 	NODEELEMENT elem;
-	LINKLISTPOSITION p1, p2;
 	int v;
-	size_t pos;
-	int max = 0;
 
-	printf("线性链表的演示\n\n");
-	srand((unsigned int)time(NULL));
-	status = LinklistInit(&linklist1, CompareRoutine, AllocateRoutine, FreeRoutine);
-	printf("初始化线性链表1: %d\n", status);
-	if (status == OK)
+	if (LinklistInit(list, CompareRoutine, AllocateRoutine, FreeRoutine) == OK)
 	{
-		structure_length = RangeRandom(STRUCTURE_SIZE_MIN, STRUCTURE_SIZE_MAX);	//线性表长度10-30随机
-		printf("随机线性链表1长度: %d\n", structure_length);
-		for (int i = 0; i < structure_length; i++)
+		for (int i = 0; i < length; i++)
 		{
 			elem.size = sizeof(int);
 			v = rand();
 			elem.data = &v;
-			pos = RangeRandom(0, (int)LinklistLength(&linklist1) + 1);	//插入线性表位置0-线性表长度随机
-			status = LinklistInsert(&linklist1, pos, &elem);
-			if (v > max)
+			LinklistOrderInsert(list, &elem);
+		}
+		ret = true;
+	}
+	return ret;
+}
+
+bool InitRandomLinklist(LINKLIST *list, int length, int *max)
+{
+	NODEELEMENT elem;
+	int v;
+	bool ret = false;
+	size_t pos;
+
+	if (max)
+	{
+		*max = 0;
+	}
+	if (LinklistInit(list, CompareRoutine, AllocateRoutine, FreeRoutine) == OK)
+	{
+		for (int i = 0; i < length; i++)
+		{
+			elem.size = sizeof(int);
+			v = rand();
+			elem.data = &v;
+			pos = RangeRandom(0, (int)LinklistLength(list) + 1);	//插入线性表位置0-线性表长度随机
+			if (LinklistInsert(list, pos, &elem) == OK)
 			{
-				max = v;
+				if (max)
+				{
+					if (v > *max)
+					{
+						*max = v;
+					}
+				}
 			}
 		}
+		ret = true;
+	}
+	return ret;
+}
+
+void ShowLinklist()
+{
+	LINKLIST linklist1, linklist2, linklist3;
+	Status status;
+	NODEELEMENT elem;
+	LINKLISTPOSITION p1, p2;
+	int max = 0;
+
+	printf("线性链表的演示\n\n");
+	srand((unsigned int)time(NULL));
+
+	if (InitRandomLinklist(&linklist1, RangeRandom(STRUCTURE_SIZE_MIN, STRUCTURE_SIZE_MAX), &max))
+	{
 		printf("线性链表1长度: %zd\n", LinklistLength(&linklist1));
 		LinklistTraverse(&linklist1, linklist_print_value);
 		printf("\b\b  \n");
@@ -95,24 +132,8 @@ void ShowLinklist()
 		}
 		printf("\n");
 
-		status = LinklistInit(&linklist2, CompareRoutine, AllocateRoutine, FreeRoutine);
-		printf("初始化线性链表2: %d\n", status);
-		if (status == OK)
+		if (InitRandomLinklist(&linklist2, RangeRandom(STRUCTURE_SIZE_MIN, STRUCTURE_SIZE_MAX), NULL))
 		{
-			structure_length = RangeRandom(STRUCTURE_SIZE_MIN, STRUCTURE_SIZE_MAX);	//线性表长度10-30随机
-			printf("随机线性链表2长度: %d\n", structure_length);
-			for (int i = 0; i < structure_length; i++)
-			{
-				elem.size = sizeof(int);
-				v = rand();
-				elem.data = &v;
-				pos = RangeRandom(0, (int)LinklistLength(&linklist2) + 1);	//插入线性表位置0-线性表长度随机
-				status = LinklistInsert(&linklist2, pos, &elem);
-				if (v > max)
-				{
-					max = v;
-				}
-			}
 			printf("线性链表2长度: %zd\n", LinklistLength(&linklist2));
 			LinklistTraverse(&linklist2, linklist_print_value);
 			printf("\b\b  \n\n");
@@ -123,6 +144,32 @@ void ShowLinklist()
 			LinklistDestroy(&linklist2);
 		}
 
+		LinklistDestroy(&linklist1);
+	}
+
+	printf("\n");
+	if (InitOrderLinklist(&linklist1, RangeRandom(STRUCTURE_SIZE_MIN, STRUCTURE_SIZE_MAX)))
+	{
+		printf("构造有序线性链表1, 长度: %zd\n", LinklistLength(&linklist1));
+		LinklistTraverse(&linklist1, linklist_print_value);
+		printf("\b\b  \n");
+
+		if (InitOrderLinklist(&linklist2, RangeRandom(STRUCTURE_SIZE_MIN, STRUCTURE_SIZE_MAX)))
+		{
+			printf("\n构造有序线性链表2, 长度: %zd\n", LinklistLength(&linklist2));
+			LinklistTraverse(&linklist2, linklist_print_value);
+			printf("\b\b  \n");
+
+			if (LinklistInit(&linklist3, CompareRoutine, AllocateRoutine, FreeRoutine) == OK)
+			{
+				LinklistMerge(&linklist1, &linklist2, &linklist3);
+				printf("\n归并有序线性链表1和2, 新有序链表长度: %zd\n", LinklistLength(&linklist3));
+				LinklistTraverse(&linklist3, linklist_print_value);
+				printf("\b\b  \n");
+				LinklistDestroy(&linklist3);
+			}
+			LinklistDestroy(&linklist2);
+		}
 		LinklistDestroy(&linklist1);
 	}
 }

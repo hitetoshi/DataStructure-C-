@@ -18,7 +18,8 @@ void __cdecl FreeRoutine(void *Buffer)
 
 int __cdecl CompareRoutine(NODEELEMENT *FirstElement, NODEELEMENT* SecondElement)
 {
-	return (*((int *)FirstElement->data)) - (*((int *)SecondElement->data));
+	return (FirstElement->size >= sizeof(int) && FirstElement->data && SecondElement->size >= sizeof(int) && SecondElement->data) ?
+		(*((int *)FirstElement->data)) - (*((int *)SecondElement->data)) : -1;
 }
 
 int RangeRandom(int range_min, int range_max)
@@ -46,8 +47,10 @@ int main(int argc, char *argv[])
 		break;
 	case 2:
 		ShowLinklist();
+		break;
 	case 3:
 		ShowPolynmail();
+		break;
 	default:
 		break;
 	}
