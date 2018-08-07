@@ -16,7 +16,7 @@ void __cdecl FreeRoutine(void *Buffer)
 	delete[] Buffer;
 }
 
-int __cdecl CompareRoutine(NODEELEMENT *FirstElement, NODEELEMENT* SecondElement)
+int __cdecl CompareRoutine(ELEMENTNODE *FirstElement, ELEMENTNODE* SecondElement)
 {
 	return (FirstElement->size >= sizeof(int) && FirstElement->data && SecondElement->size >= sizeof(int) && SecondElement->data) ?
 		(*((int *)FirstElement->data)) - (*((int *)SecondElement->data)) : -1;
@@ -51,6 +51,8 @@ int main(int argc, char *argv[])
 	case 3:
 		ShowPolynmail();
 		break;
+	case 4:
+		ShowStack();
 	default:
 		break;
 	}

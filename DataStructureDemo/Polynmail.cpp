@@ -12,7 +12,7 @@ void InitPolyn(POLYNOMAIL *polyn, int m)
 			items[i].coef = (float)rand()/100;
 			items[i].expn = RangeRandom(1, 11);	//´ÎËæ»úÊý1-11
 		}
-		PolynAddItem(polyn, items, m);
+		PolynAddMonos(polyn, items, m);
 		delete[] items;
 	}
 }
