@@ -11,5 +11,7 @@
 #include <tchar.h>
 #include <time.h>
 #include <string.h>
+#include <conio.h>
 
 // TODO: reference additional headers your program requires here
+#include <Windows.h>

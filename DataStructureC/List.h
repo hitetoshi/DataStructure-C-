@@ -91,7 +91,7 @@ extern "C"
 	//本例对教材算法2.21作了一些修改
 	//首先若在LinklistMerge函数内部初始化lc(分配内存),则需要主调函数调用LinklistDestroy(lc)将其释放
 	//这不符合"谁分配谁释放"原则,因此本例要求传入的lc是已经调用LinklistInit的链表
-	//同时也不释放la和lb的头结点,由调用函数自行销毁
+	//同时也不释放la和lb的头结点,由调用者自行销毁
 	void LinklistMerge(LINKLIST *la, LINKLIST *lb, LINKLIST *lc);
 
 	//一元多项式

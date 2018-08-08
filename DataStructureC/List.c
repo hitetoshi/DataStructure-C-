@@ -2,7 +2,7 @@
 
 Status SqlistInit(SQLIST *list, PCOMPAREROUTINE compareroutine, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine)
 {
-	list->elem = MEM_ALOC(LIST_INIT_SIZE*sizeof(ELEMENTNODE));
+	list->elem = CMEM_ALOC(LIST_INIT_SIZE*sizeof(ELEMENTNODE));
 	if (list->elem)
 	{
 		memset(list->elem, 0, LIST_INIT_SIZE * sizeof(ELEMENTNODE));
@@ -31,7 +31,7 @@ Status SqlistInsert(SQLIST *list, size_t pos, ELEMENTNODE *elem)
 	}
 	if (list->length >= list->listsize)
 	{
-		new_base = MEM_REALOC(list->elem, (list->length + LIST_INCREMENT) * sizeof(ELEMENTNODE));
+		new_base = CMEM_REALOC(list->elem, (list->length + LIST_INCREMENT) * sizeof(ELEMENTNODE));
 		if (new_base)
 		{
 			list->elem = new_base;
@@ -77,7 +77,7 @@ void SqlistDestroy(SQLIST *list)
 	//O(list->length)
 	//ÓÉSqlistClear¾ö¶¨
 	SqlistClear(list);
-	MEM_FREE(list->elem);
+	CMEM_FREE(list->elem);
 	list->elem = NULL;
 	list->listsize = 0;
 }
@@ -89,7 +89,7 @@ void SqlistClear(SQLIST *list)
 	{
 		if (list->elem[0].data)
 		{
-			MEM_FREE(list->elem[0].data);
+			CMEM_FREE(list->elem[0].data);
 		}
 		list->elem[0].data = NULL;
 		list->elem[0].size = 0;
@@ -252,7 +252,7 @@ Status SqlistMerge(SQLIST *la, SQLIST *lb, SQLIST *lc)
 	SqlistClear(lc);
 	lc->listsize = la->length + lb->length;
 	lc->length = 0;
-	new_node_base = MEM_REALOC(lc->elem, lc->listsize * sizeof(ELEMENTNODE));
+	new_node_base = CMEM_REALOC(lc->elem, lc->listsize * sizeof(ELEMENTNODE));
 	if (new_node_base)
 	{
 		lc->elem = new_node_base;
@@ -282,7 +282,7 @@ Status SqlistMerge(SQLIST *la, SQLIST *lb, SQLIST *lc)
 
 Status LinklistMakeNode(PALLOCATEROUTINE allocateroutine, PLINKLISTNODE *p, ELEMENTNODE *elem)
 {
-	*p = MEM_ALOC(sizeof(LINKLISTNODE));
+	*p = CMEM_ALOC(sizeof(LINKLISTNODE));
 	if (*p)
 	{
 		(*p)->elem.data = allocateroutine(elem->size);
@@ -295,7 +295,7 @@ Status LinklistMakeNode(PALLOCATEROUTINE allocateroutine, PLINKLISTNODE *p, ELEM
 		}
 		else
 		{
-			MEM_FREE(*p);
+			CMEM_FREE(*p);
 			*p = NULL;
 			return ERROR;
 		}
@@ -311,14 +311,14 @@ Status LinklistFreeNode(PFREEROUTINE freeroutine, PLINKLISTNODE *p)
 	freeroutine((*p)->elem.data);
 	(*p)->elem.data = NULL;
 	(*p)->elem.size = 0;
-	MEM_FREE(*p);
+	CMEM_FREE(*p);
 	*p = NULL;
 	return OK;
 }
 
 Status LinklistInit(LINKLIST *list, PCOMPAREROUTINE compareroutine, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine)
 {
-	list->header = MEM_ALOC(sizeof(LINKLISTNODE));
+	list->header = CMEM_ALOC(sizeof(LINKLISTNODE));
 	if (list->header)
 	{
 		list->compareroutine=compareroutine;
@@ -357,7 +357,7 @@ void LinklistClear(LINKLIST *list)
 void LinklistDestroy(LINKLIST *list)
 {
 	LinklistClear(list);
-	MEM_FREE(list->header);
+	CMEM_FREE(list->header);
 	list->header = NULL;
 }
 
@@ -811,7 +811,7 @@ Status PolynCreate(POLYNOMAIL *polynmail, PALLOCATEROUTINE allocateroutine, PFRE
 		elem.size = sizeof(POLYN_ELEMENT_DATA);
 		elem_data.coef = 0.0;
 		elem_data.expn = -1;
-		polynmail->header->elem.data = MEM_ALOC(sizeof(POLYN_ELEMENT_DATA));
+		polynmail->header->elem.data = CMEM_ALOC(sizeof(POLYN_ELEMENT_DATA));
 		if (polynmail->header)
 		{
 			polynmail->header->elem.size = sizeof(POLYN_ELEMENT_DATA);
@@ -828,7 +828,7 @@ Status PolynCreate(POLYNOMAIL *polynmail, PALLOCATEROUTINE allocateroutine, PFRE
 
 void PolynDestroy(POLYNOMAIL *polynmail)
 {
-	MEM_FREE(polynmail->header->elem.data);
+	CMEM_FREE(polynmail->header->elem.data);
 	LinklistDestroy(polynmail);
 }
 
