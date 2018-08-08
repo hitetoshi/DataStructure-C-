@@ -211,6 +211,27 @@ void ShowLineEdit()
 	printf("%s\n", ch); 
 }
 
+void ShowEvaluateExpression()
+{
+	char expression[256];
+	int result;
+
+	printf("表达式计算演示:\n输入需要计算的表达式,支持+-*/()运算符:");
+	memset(expression, 0, sizeof(expression));
+	scanf_s("%s", expression, 256);
+	//加上结束符#
+	strcat_s(expression, _countof(expression), "#");
+	if (EvaluateExpression(expression, &result) == OK)
+	{
+		expression[strlen(expression)-1] = 0;
+		printf("%s = %d\n", expression, result);
+	}
+	else
+	{
+		printf("无法计算表达式的值,可能是表达式有语法错误\n");
+	}
+}
+
 void ShowStack(int i)
 {
 	srand((int)time(NULL));
@@ -228,6 +249,9 @@ void ShowStack(int i)
 		break;
 	case 4:
 		ShowMaze();
+		break;
+	case 5:
+		ShowEvaluateExpression();
 		break;
 	default:
 		break;

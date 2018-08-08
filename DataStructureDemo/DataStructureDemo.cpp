@@ -45,13 +45,13 @@ WORD ConsoleTextColor(WORD wColor)
 void print_usage()
 {
 	printf("选择要演示的数据结构:\n\n");
-	printf("1:线性顺序表\n2:线性链表\n3:一元多项式运算\n4:栈(进制转换,括号匹配,行编辑,迷宫求解)\n0:退出程序\n");
+	printf("1:线性顺序表\n2:线性链表\n3:一元多项式运算\n4:栈(进制转换,括号匹配,行编辑,迷宫求解,表达式计算)\n0:退出程序\n");
 }
 
 void print_stack()
 {
 	printf("选择要演示的栈结构:\n");
-	printf("1:进制转换\n2:括号匹配\n3:行编辑\n4:迷宫求解\n");
+	printf("1:进制转换\n2:括号匹配\n3:行编辑\n4:迷宫求解\n5:表达式计算\n");
 }
 
 int main(int argc, char *argv[])

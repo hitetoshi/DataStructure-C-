@@ -470,3 +470,199 @@ Status MazePath(int **point, int x, int y, COORDINATE *start, COORDINATE *end, S
 
 	return FALSE;
 }
+
+struct _OPTRPRIOR_SUB
+{
+	char optr;
+	int prior;
+};
+
+struct _OPTRPRIOR
+{
+	char optr;
+	struct _OPTRPRIOR_SUB optrsub[7];
+};
+
+const struct _OPTRPRIOR OptrPriorTable[] = {
+	{ '+',{ { '+',1 },{ '-',1 },{ '*',-1 },{ '/',-1 },{ '(',-1 },{ ')',1 },{ '#',1 } } },
+	{ '-',{ { '+',1 },{ '-',1 },{ '*',-1 },{ '/',-1 },{ '(',-1 },{ ')',1 },{ '#',1 } } },
+	{ '*',{ { '+',1 },{ '-',1 },{ '*',1 },{ '/',1 },{ '(',-1 },{ ')',1 },{ '#',1 } } },
+	{ '/',{ { '+',1 },{ '-',1 },{ '*',1 },{ '/',1 },{ '(',-1 },{ ')',1 },{ '#',1 } } },
+	{ '(',{ { '+',-1 },{ '-',-1 },{ '*',-1 },{ '/',-1 },{ '(',-1 },{ ')',0 },{ '#',-2 } } },
+	{ ')',{ { '+',1 },{ '-',1 },{ '*',1 },{ '/',1 },{ '(',-2 },{ ')',1 },{ '#',1 } } },
+	{ '#',{ { '+',-1 },{ '-',-1 },{ '*',-1 },{ '/',-1 },{ '(',-1 },{ ')',-2 },{ '#',0 } } },
+};
+
+const char OP[] = { '+','-','*','/','(',')','#',0 };
+
+Status EEOptrStackPush(SQSTACK *s, char ch)
+{
+	ELEMENTNODE e;
+	e.data = &ch;
+	e.size = sizeof(ch);
+	return StackPush(s, &e);
+}
+
+char EEOptrStackGetTop(SQSTACK *s)
+{
+	ELEMENTNODE e;
+	char ch;
+
+	e.data = &ch;
+	e.size = sizeof(ch);
+	return (StackGetTop(s, &e) == OK)?ch:0;
+}
+
+char EEOptrStackPop(SQSTACK *s)
+{
+	ELEMENTNODE e;
+	char ch;
+
+	e.data = &ch;
+	e.size = sizeof(ch);
+	return StackPop(s, &e) == OK ? ch : 0;
+}
+
+Status EEOpndStackPush(SQSTACK *s, int opnd)
+{
+	ELEMENTNODE e;
+	e.data = &opnd;
+	e.size = sizeof(int);
+	return StackPush(s, &e);
+}
+
+int EEOpndStackPop(SQSTACK *s)
+{
+	ELEMENTNODE e;
+	int v;
+	
+	e.data = &v;
+	e.size = sizeof(v);
+	return (StackPop(s, &e) == OK) ? v : 0;
+}
+
+Status EEIn(char c, const char *p)
+{
+	while (*p)
+	{
+		if (c == *p)
+		{
+			return TRUE;
+		}
+		p++;
+	}
+	return FALSE;
+}
+
+int EEPrecede(char c1, char c2)
+{
+	for (size_t i = 0; i < sizeof(OptrPriorTable) / sizeof(struct _OPTRPRIOR); i++)
+	{
+		if (c1 == OptrPriorTable[i].optr)
+		{
+			for (size_t j = 0; j < sizeof(OptrPriorTable[i].optrsub) / sizeof(struct _OPTRPRIOR_SUB); j++)
+			{
+				if (c2 == OptrPriorTable[i].optrsub[j].optr)
+				{
+					return OptrPriorTable[i].optrsub[j].prior;
+				}
+			}
+		}
+	}
+	return -2;
+}
+
+int EEOperate(int a, char optr, int b)
+{
+	switch (optr)
+	{
+	case '+':
+		return a + b;
+		break;
+	case '-':
+		return a - b;
+		break;
+	case '*':
+		return a*b;
+		break;
+	case '/':
+		return a / b;
+		break;
+	default:
+		break;
+	}
+	return 0;
+}
+
+Status EvaluateExpression(char *expression, int *result)
+{
+	SQSTACK OPTR, OPND;
+	char *c;
+	char theta;
+	int a, b;
+	char opnd[100];
+	int opnd_size;
+
+	if (!StackInit(&OPTR, StackAllocRotuine, StackFreeRoutine))
+	{
+		return ERROR;
+	}
+	if (!StackInit(&OPND, StackAllocRotuine, StackFreeRoutine))
+	{
+		StackDestroy(&OPTR);
+		return ERROR;
+	}
+	EEOptrStackPush(&OPTR, '#');
+	c = expression;
+	while (*c)
+	{
+		memset(opnd, 0, sizeof(opnd));
+		opnd_size = 0;
+
+		while (*c && !EEIn(*c, OP))
+		{
+			if (isdigit(*c))
+			{
+				opnd[opnd_size++] = *c;
+			}
+			else
+			{
+				StackDestroy(&OPTR);
+				StackDestroy(&OPND);
+				return ERROR;
+			}
+			c++;
+		}
+		if (opnd_size)
+		{
+			EEOpndStackPush(&OPND, atoi(opnd));
+		}
+
+		switch (EEPrecede(EEOptrStackGetTop(&OPTR), *c))
+		{
+		case -1:
+			EEOptrStackPush(&OPTR, *c);
+			c++;
+			break;
+		case 0:
+			EEOptrStackPop(&OPTR);
+			c++;
+			break;
+		case 1:
+			theta = EEOptrStackPop(&OPTR);
+			b = EEOpndStackPop(&OPND);
+			a = EEOpndStackPop(&OPND);
+			EEOpndStackPush(&OPND, EEOperate(a, theta, b));
+			break;
+		default:
+			StackDestroy(&OPTR);
+			StackDestroy(&OPND);
+			return ERROR;
+		}
+	
+	}
+	*result = EEOpndStackPop(&OPND);
+	StackDestroy(&OPTR);
+	StackDestroy(&OPND);
+	return OK;
+}

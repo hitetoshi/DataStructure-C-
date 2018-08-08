@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <memory.h>
 #include <string.h>
+#include <ctype.h>
 
 #ifdef cplusplus
 extern "C"

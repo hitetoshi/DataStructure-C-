@@ -61,6 +61,15 @@ extern "C"
 	//若迷宫求解失败,返回FALSE
 	Status MazePath(int **point, int x, int y, COORDINATE *start, COORDINATE *end, SQSTACK *path);
 
+	//算法3.4表达式求值
+	//本例对教材算法3.4稍作修改:
+	//1.不在函数内部接收控制台输入,而是接收一个以‘#’为结束符的表达式字符串expression(可方便主调函数传入表达式)
+	//2.计算结果以result返回给主调函数
+	//3.对操作数的处理稍作修改,支持多位数的表达式
+	//4.计算成功函数返回OK,否则返回ERROR
+	Status EvaluateExpression(char *expression, int *result);
+
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus
