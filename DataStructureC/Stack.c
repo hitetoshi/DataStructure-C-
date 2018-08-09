@@ -6,7 +6,7 @@ Status StackInit(SQSTACK *stack, PALLOCATEROUTINE allocateroutine, PFREEROUTINE 
 	stack->base = CMEM_ALOC(STACK_INIT_SIZE*sizeof(ELEMENT));
 	if (stack->base)
 	{
-		memset(stack->base, 0, STACK_INIT_SIZE*sizeof(ELEMENT));
+		CMEM_SET(stack->base, 0, STACK_INIT_SIZE*sizeof(ELEMENT));
 		stack->top = stack->base;
 		stack->stacksize = STACK_INIT_SIZE;
 		stack->allocateroutine = allocateroutine;
@@ -58,7 +58,7 @@ Status StackGetTop(SQSTACK *stack, ELEMENT *e)
 
 	if (e->data && e->size >= (stack->top-1)->size)
 	{
-		memcpy(e->data, (stack->top-1)->data, (stack->top-1)->size);
+		CMEM_COPY(e->data, (stack->top-1)->data, (stack->top-1)->size);
 		e->size = (stack->top-1)->size;
 		return OK;
 	}
@@ -186,7 +186,7 @@ void brackets(char *ch)
 
 	if (StackInit(&s, CommonAllocRotuine, CommonFreeRoutine))
 	{
-		for (i = 0; i < (int)strlen(ch) && !failure; i++)
+		for (i = 0; i < (int)CSTRING_LENGTH(ch) && !failure; i++)
 		{
 			if (ch[i] == '(' || ch[i] == '[' || ch[i] == '{')
 			{
@@ -615,7 +615,7 @@ Status EvaluateExpression(char *expression, int *result)
 		//将存储的操作数字符串整体转换为数字(atoi函数)
 		while (*c && !EEIn(*c, OP))
 		{
-			if (isdigit(*c))
+			if (CISDIGIT(*c))
 			{
 				opnd[opnd_size++] = *c;
 			}

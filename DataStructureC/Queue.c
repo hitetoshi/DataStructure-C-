@@ -66,7 +66,7 @@ Status LinkQueueGetHead(LINKQUEUE *q, ELEMENT *e)
 	{
 		if (e->size >= q->front->next->elem.size)
 		{
-			memcpy(e->data, q->front->next->elem.data, q->front->next->elem.size);
+			CMEM_COPY(e->data, q->front->next->elem.data, q->front->next->elem.size);
 			e->size = q->front->next->elem.size;
 			return OK;
 		}
@@ -88,7 +88,7 @@ Status LinkQueueEn(LINKQUEUE *q, ELEMENT *e)
 	new_node = CMEM_ALOC(sizeof(LINKNODE));
 	if (new_node)
 	{
-		memset(new_node, 0, sizeof(LINKNODE));
+		CMEM_SET(new_node, 0, sizeof(LINKNODE));
 		new_node->elem.data = q->allocateroutine(e->size);
 		if (new_node->elem.data)
 		{
@@ -314,7 +314,7 @@ Status Bank_Simulation(int CloseTime, void(__cdecl *pEventNotify)(BM_EVENT *en),
 	PLINKNODE q;
 	BM_EVENT *en;
 
-	srand((int)time(NULL));
+	srand((int)CTIME(NULL));
 
 	if (OpenForDay(&bm_data) != OK)	//≥ı ºªØ
 	{

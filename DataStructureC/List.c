@@ -5,7 +5,7 @@ Status SqlistInit(SQLIST *list, PCOMPAREROUTINE compareroutine, PALLOCATEROUTINE
 	list->elem = CMEM_ALOC(LIST_INIT_SIZE*sizeof(ELEMENT));
 	if (list->elem)
 	{
-		memset(list->elem, 0, LIST_INIT_SIZE * sizeof(ELEMENT));
+		CMEM_SET(list->elem, 0, LIST_INIT_SIZE * sizeof(ELEMENT));
 		list->length = 0;
 		list->listsize = LIST_INIT_SIZE;
 		list->compareroutine = compareroutine;
@@ -46,7 +46,7 @@ Status SqlistInsert(SQLIST *list, size_t pos, ELEMENT *elem)
 	new_node_data= list->allocateroutine(elem->size);
 	if (new_node_data)
 	{
-		memcpy(new_node_data, elem->data, elem->size);
+		CMEM_COPY(new_node_data, elem->data, elem->size);
 
 		////Ê±¼ä¸´ÔÓ¶È:O(list->length)
 		for (p = list->elem + list->length - 1; p >= list->elem + pos; p--)

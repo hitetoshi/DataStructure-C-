@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <memory.h>
-#include <string.h>
-#include <ctype.h>
 #include <time.h>
 
 #ifdef __cplusplus
@@ -23,6 +21,16 @@ extern "C"
 	//一些基本的类型
 
 	typedef	int	Status;
+
+#ifndef _VCRUNTIME_H
+#ifdef _WIN64
+	typedef	unsigned __int64 size_t;
+#else
+	typedef	unsigned int size_t;
+#endif // _WIN64
+
+#endif // !_VCRUNTIME_H
+
 
 	//通用节点元素
 	typedef	struct _ELEMENT
@@ -86,11 +94,20 @@ extern "C"
 #define	CMEM_ALOC(size)				malloc(size)
 #define	CMEM_FREE(block)			free(block)
 #define	CMEM_REALOC(block, size)	realloc(block,size)
+#define	CMEM_SET(block, v, size)	memset(block,v,size)
+#define	CMEM_COPY(dest,src,size)	memcpy(dest,src,size)
+
+#define	CSTRING_LENGTH(str)	_strlen(str)
+
+#define	CISDIGIT(c)		_isdigit(c)
+#define	CTIME(_Time)	time(_Time)
 
 	//一些公用函数
 	void * __cdecl CommonAllocRotuine(size_t bytes);
 	void __cdecl CommonFreeRoutine(void *block);
 	int RangeRandom(int range_min, int range_max);
+	size_t _strlen(char *s);
+	Status _isdigit(int c);
 
 #ifdef __cplusplus
 }
