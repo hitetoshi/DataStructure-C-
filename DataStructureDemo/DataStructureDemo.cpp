@@ -16,16 +16,10 @@ void __cdecl FreeRoutine(void *Buffer)
 	delete[] Buffer;
 }
 
-int __cdecl CompareRoutine(ELEMENTNODE *FirstElement, ELEMENTNODE* SecondElement)
+int __cdecl CompareRoutine(ELEMENT *FirstElement, ELEMENT* SecondElement)
 {
 	return (FirstElement->size >= sizeof(int) && FirstElement->data && SecondElement->size >= sizeof(int) && SecondElement->data) ?
 		(*((int *)FirstElement->data)) - (*((int *)SecondElement->data)) : -1;
-}
-
-int RangeRandom(int range_min, int range_max)
-{
-	int i = rand();
-	return (int)((double)rand() / (RAND_MAX + 1.0)*(range_max - range_min) + range_min);
 }
 
 WORD ConsoleTextColor(WORD wColor)
@@ -45,7 +39,7 @@ WORD ConsoleTextColor(WORD wColor)
 void print_usage()
 {
 	printf("选择要演示的数据结构:\n\n");
-	printf("1:线性顺序表\n2:线性链表\n3:一元多项式运算\n4:栈(进制转换,括号匹配,行编辑,迷宫求解,表达式计算)\n0:退出程序\n");
+	printf("1:线性顺序表\n2:线性链表\n3:一元多项式运算\n4:栈(进制转换,括号匹配,行编辑,迷宫求解,表达式计算)\n5:队列(离散事件模拟)0:退出程序\n");
 }
 
 void print_stack()
@@ -56,8 +50,8 @@ void print_stack()
 
 int main(int argc, char *argv[])
 {
-	int cmd;
-	int cat;
+	int cmd = 0;
+	int cat = 0;
 	char c;
 
 	if (argc >= 2)
@@ -73,6 +67,12 @@ int main(int argc, char *argv[])
 			while ((c = getchar()) != EOF && c != '\n');
 		}
 	}
+
+	if (argc >= 3)
+	{
+		cat = atoi(argv[2]);
+	}
+
 	do
 	{
 		switch (cmd)
@@ -89,11 +89,7 @@ int main(int argc, char *argv[])
 			ShowPolynmail();
 			break;
 		case 4:
-			if (argc >= 3)
-			{
-				cat = atoi(argv[2]);
-			}
-			else
+			if(!cat)
 			{
 				printf("\n");
 				print_stack();
@@ -104,6 +100,9 @@ int main(int argc, char *argv[])
 				}
 			}
 			ShowStack(cat);
+		case 5:
+			ShowQueue();
+			break;
 		default:
 			break;
 		}
@@ -117,6 +116,7 @@ int main(int argc, char *argv[])
 			printf("输入错误,请重新输入:");
 			while ((c = getchar()) != EOF && c != '\n');
 		}
+		cat = 0;
 	} while (cmd != 0);
     return 0;
 }

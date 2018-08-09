@@ -2,7 +2,7 @@
 
 #include "DataStructureDemo.h"
 
-Status __cdecl sqlist_print_value(ELEMENTNODE *elem)
+Status __cdecl sqlist_print_value(ELEMENT *elem)
 {
 	if (elem->size>=sizeof(int) && elem->data)
 	{
@@ -13,7 +13,7 @@ Status __cdecl sqlist_print_value(ELEMENTNODE *elem)
 
 bool InitOrderSqlist(SQLIST *list, int length)
 {
-	ELEMENTNODE elem;
+	ELEMENT elem;
 	int v;
 	bool ret = false;
 	
@@ -33,7 +33,7 @@ bool InitOrderSqlist(SQLIST *list, int length)
 
 bool InitRandomSqlist(SQLIST *list, int length, int *max)
 {
-	ELEMENTNODE elem;
+	ELEMENT elem;
 	int v;
 	size_t pos;
 	bool ret = false;
@@ -69,7 +69,7 @@ bool InitRandomSqlist(SQLIST *list, int length, int *max)
 void ShowSqlist()
 {
 	SQLIST sqlist1, sqlist2, sqlist3;
-	ELEMENTNODE elem, elem2;
+	ELEMENT elem, elem2;
 	int v;
 	int max = 0;
 	size_t pos;

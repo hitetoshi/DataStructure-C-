@@ -1,11 +1,12 @@
-#include "DataStructureC.h"
+#include "Stack.h"
+#include "List.h"
 
 Status StackInit(SQSTACK *stack, PALLOCATEROUTINE allocateroutine, PFREEROUTINE freeroutine)
 {
-	stack->base = CMEM_ALOC(STACK_INIT_SIZE*sizeof(ELEMENTNODE));
+	stack->base = CMEM_ALOC(STACK_INIT_SIZE*sizeof(ELEMENT));
 	if (stack->base)
 	{
-		memset(stack->base, 0, STACK_INIT_SIZE*sizeof(ELEMENTNODE));
+		memset(stack->base, 0, STACK_INIT_SIZE*sizeof(ELEMENT));
 		stack->top = stack->base;
 		stack->stacksize = STACK_INIT_SIZE;
 		stack->allocateroutine = allocateroutine;
@@ -48,7 +49,7 @@ size_t StackLength(SQSTACK *stack)
 	return stack->top - stack->base;
 }
 
-Status StackGetTop(SQSTACK *stack, ELEMENTNODE *e)
+Status StackGetTop(SQSTACK *stack, ELEMENT *e)
 {
 	if (stack->top == stack->base)
 	{
@@ -67,20 +68,20 @@ Status StackGetTop(SQSTACK *stack, ELEMENTNODE *e)
 	}
 }
 
-Status StackPush(SQSTACK *stack, ELEMENTNODE *e)
+Status StackPush(SQSTACK *stack, ELEMENT *e)
 {
-	ELEMENTNODE *new_base;
+	ELEMENT *new_base;
 
 	if (stack->top - stack->base >= stack->stacksize)
 	{
-		new_base = CMEM_REALOC(stack->base, (stack->stacksize + STACKINCREMENT)*sizeof(ELEMENTNODE));
+		new_base = CMEM_REALOC(stack->base, (stack->stacksize + STACKINCREMENT)*sizeof(ELEMENT));
 		if (!new_base)
 		{
 			return OVERFLOW;
 		}
 		else
 		{
-			memset(new_base + stack->stacksize, 0, STACKINCREMENT*sizeof(ELEMENTNODE));
+			memset(new_base + stack->stacksize, 0, STACKINCREMENT*sizeof(ELEMENT));
 			stack->base = new_base;
 			stack->top = stack->base + stack->stacksize;
 			stack->stacksize += STACKINCREMENT;
@@ -100,7 +101,7 @@ Status StackPush(SQSTACK *stack, ELEMENTNODE *e)
 	}
 }
 
-Status StackPop(SQSTACK *stack, ELEMENTNODE *e)
+Status StackPop(SQSTACK *stack, ELEMENT *e)
 {
 	if (stack->top == stack->base)
 	{
@@ -122,9 +123,9 @@ Status StackPop(SQSTACK *stack, ELEMENTNODE *e)
 	}
 }
 
-Status StackTraverse(SQSTACK *stack, Status(*visit)(ELEMENTNODE *e, void *param), void *param)
+Status StackTraverse(SQSTACK *stack, Status(*visit)(ELEMENT *e, void *param), void *param)
 {
-	ELEMENTNODE *node = stack->top;
+	ELEMENT *node = stack->top;
 
 	while (node != stack->base)
 	{
@@ -137,23 +138,13 @@ Status StackTraverse(SQSTACK *stack, Status(*visit)(ELEMENTNODE *e, void *param)
 	return OK;
 }
 
-void * __cdecl StackAllocRotuine(size_t bytes)
-{
-	return CMEM_ALOC(bytes);
-}
-
-void __cdecl StackFreeRoutine(void *block)
-{
-	CMEM_FREE(block);
-}
-
 void conversion(int num, int base)
 {
-	ELEMENTNODE e;
+	ELEMENT e;
 	int N1, N2;
 	SQSTACK s;
 
-	if (StackInit(&s, StackAllocRotuine, StackFreeRoutine) == OK)
+	if (StackInit(&s, CommonAllocRotuine, CommonFreeRoutine) == OK)
 	{
 		N1 = num;
 		e.data = &N2;
@@ -185,7 +176,7 @@ void conversion(int num, int base)
 void brackets(char *ch)
 {
 	SQSTACK s;
-	ELEMENTNODE e;
+	ELEMENT e;
 	char v;
 	Status failure = FALSE;
 	int i;
@@ -193,7 +184,7 @@ void brackets(char *ch)
 	e.data = &v;
 	e.size = sizeof(v);
 
-	if (StackInit(&s, StackAllocRotuine, StackFreeRoutine))
+	if (StackInit(&s, CommonAllocRotuine, CommonFreeRoutine))
 	{
 		for (i = 0; i < (int)strlen(ch) && !failure; i++)
 		{
@@ -266,13 +257,13 @@ Status LineEdit(char *buf, size_t buf_size)
 {
 	SQSTACK s;
 	char ch;
-	ELEMENTNODE e,r;
+	ELEMENT e,r;
 	char v;
 	size_t bytes_tranfered = 0;
 
 	e.data = &v;
 	e.size = sizeof(v);
-	if (StackInit(&s, StackAllocRotuine, StackFreeRoutine) == OK)
+	if (StackInit(&s, CommonAllocRotuine, CommonFreeRoutine) == OK)	//构造空栈s
 	{
 		ch = getchar();
 		while (ch != EOF)
@@ -281,13 +272,13 @@ Status LineEdit(char *buf, size_t buf_size)
 			{
 				switch (ch)
 				{
-				case '#':
+				case '#':	//仅当栈非空时退栈
 					StackPop(&s, &e);
 					break;
-				case '@':
+				case '@':	//重置s为空栈
 					StackClear(&s);
 					break;
-				default:
+				default:	//有效字符进栈,栈可以动态增长
 					v = ch;
 					StackPush(&s, &e);
 					break;
@@ -331,7 +322,7 @@ Status LineEdit(char *buf, size_t buf_size)
 //当前位置是否可以通过(未曾走到过的通道块)
 Status MazePass(int **point, int x, int y, COORDINATE *pos, SQSTACK *s, SQLIST *blocked, SQLIST *foot)
 {
-	ELEMENTNODE e;
+	ELEMENT e;
 
 	//位置合法且是通道
 	if (pos->x >= 0 && pos->x < x && pos->y >= 0 && pos->y < y && point[pos->x][pos->y] == 0)
@@ -375,7 +366,7 @@ void MazeNextPos(COORDINATE *curpos, int di, COORDINATE *nextpos)
 	}
 }
 
-int __cdecl MazeCompareRoutine(ELEMENTNODE *first, ELEMENTNODE *second)
+int __cdecl MazeCompareRoutine(ELEMENT *first, ELEMENT *second)
 {
 	if (((COORDINATE *)first->data)->x == ((COORDINATE *)second->data)->x && ((COORDINATE *)first->data)->y == ((COORDINATE *)second->data)->y)
 	{
@@ -393,26 +384,26 @@ Status MazePath(int **point, int x, int y, COORDINATE *start, COORDINATE *end, S
 	COORDINATE curpos;
 	int curstep;
 	MAZEELEMENT elem;
-	ELEMENTNODE e;
+	ELEMENT e;
 	SQLIST blocked;	//不能通过的位置
 	SQLIST foot;	//足迹
-	ELEMENTNODE e_list;
+	ELEMENT e_list;
 
 	e.data = &elem;
 	e.size = sizeof(elem);
 
-	if (SqlistInit(&foot, MazeCompareRoutine, StackAllocRotuine, StackFreeRoutine) == OK)
+	if (SqlistInit(&foot, MazeCompareRoutine, CommonAllocRotuine, CommonFreeRoutine) == OK)
 	{
-		if (SqlistInit(&blocked, MazeCompareRoutine, StackAllocRotuine, StackFreeRoutine) == OK)
+		if (SqlistInit(&blocked, MazeCompareRoutine, CommonAllocRotuine, CommonFreeRoutine) == OK)
 		{
-			if (StackInit(&s, StackAllocRotuine, StackFreeRoutine) == OK)
+			if (StackInit(&s, CommonAllocRotuine, CommonFreeRoutine) == OK)		//设定"当前位置"为"入口位置"
 			{
 				curpos.x = start->x;
 				curpos.y = start->y;
-				curstep = 1;
+				curstep = 1;		//探索第一步
 				do
 				{
-					if (MazePass(point, x, y, &curpos, &s, &blocked, &foot))
+					if (MazePass(point, x, y, &curpos, &s, &blocked, &foot))	//当前位置可通,即是未曾走到过的通道块
 					{
 						e_list.data = &curpos;
 						e_list.size = sizeof(COORDINATE);
@@ -422,8 +413,8 @@ Status MazePath(int **point, int x, int y, COORDINATE *start, COORDINATE *end, S
 						elem.seat.x = curpos.x;
 						elem.seat.y = curpos.y;
 						elem.di = 1;
-						StackPush(&s, &e);
-						if (curpos.x == end->x && curpos.y == end->y)
+						StackPush(&s, &e);		//加入路径
+						if (curpos.x == end->x && curpos.y == end->y)	//达到终点(出口)
 						{
 							while (!StackEmpty(&s))
 							{
@@ -437,11 +428,11 @@ Status MazePath(int **point, int x, int y, COORDINATE *start, COORDINATE *end, S
 							SqlistDestroy(&blocked);
 							return TRUE;
 						}
-						MazeNextPos(&curpos, 1, &curpos);
-						curstep++;
+						MazeNextPos(&curpos, 1, &curpos);	//取下一位置
+						curstep++;	//探索下一步
 					}
 					else
-					{
+					{	//当前位置不能通过
 						if (!StackEmpty(&s))
 						{
 							StackPop(&s, &e);
@@ -449,14 +440,14 @@ Status MazePath(int **point, int x, int y, COORDINATE *start, COORDINATE *end, S
 							{
 								e_list.data = &(((MAZEELEMENT *)e.data)->seat);
 								e_list.size = sizeof(COORDINATE);
-								SqlistInsert(&blocked, 0, &e_list);	//此路不通
+								SqlistInsert(&blocked, 0, &e_list);	//此路不通,退回一步
 								StackPop(&s, &e);
 							}
 							if (elem.di < 4)
 							{
 								elem.di++;
-								StackPush(&s, &e);
-								MazeNextPos(&elem.seat, elem.di, &curpos);
+								StackPush(&s, &e);		//换下一个方向探索
+								MazeNextPos(&elem.seat, elem.di, &curpos);	//设定'当前位置'为新位置
 							}
 						}
 					}
@@ -497,7 +488,7 @@ const char OP[] = { '+','-','*','/','(',')','#',0 };
 
 Status EEOptrStackPush(SQSTACK *s, char ch)
 {
-	ELEMENTNODE e;
+	ELEMENT e;
 	e.data = &ch;
 	e.size = sizeof(ch);
 	return StackPush(s, &e);
@@ -505,7 +496,7 @@ Status EEOptrStackPush(SQSTACK *s, char ch)
 
 char EEOptrStackGetTop(SQSTACK *s)
 {
-	ELEMENTNODE e;
+	ELEMENT e;
 	char ch;
 
 	e.data = &ch;
@@ -515,7 +506,7 @@ char EEOptrStackGetTop(SQSTACK *s)
 
 char EEOptrStackPop(SQSTACK *s)
 {
-	ELEMENTNODE e;
+	ELEMENT e;
 	char ch;
 
 	e.data = &ch;
@@ -525,7 +516,7 @@ char EEOptrStackPop(SQSTACK *s)
 
 Status EEOpndStackPush(SQSTACK *s, int opnd)
 {
-	ELEMENTNODE e;
+	ELEMENT e;
 	e.data = &opnd;
 	e.size = sizeof(int);
 	return StackPush(s, &e);
@@ -533,7 +524,7 @@ Status EEOpndStackPush(SQSTACK *s, int opnd)
 
 int EEOpndStackPop(SQSTACK *s)
 {
-	ELEMENTNODE e;
+	ELEMENT e;
 	int v;
 	
 	e.data = &v;
@@ -603,11 +594,11 @@ Status EvaluateExpression(char *expression, int *result)
 	char opnd[100];
 	int opnd_size;
 
-	if (!StackInit(&OPTR, StackAllocRotuine, StackFreeRoutine))
+	if (!StackInit(&OPTR, CommonAllocRotuine, CommonFreeRoutine))
 	{
 		return ERROR;
 	}
-	if (!StackInit(&OPND, StackAllocRotuine, StackFreeRoutine))
+	if (!StackInit(&OPND, CommonAllocRotuine, CommonFreeRoutine))
 	{
 		StackDestroy(&OPTR);
 		return ERROR;
@@ -619,6 +610,9 @@ Status EvaluateExpression(char *expression, int *result)
 		memset(opnd, 0, sizeof(opnd));
 		opnd_size = 0;
 
+		//对教材代码稍作改进,可以处理多位数运算
+		//如果不是操作符,则储存起来,直到遇到操作符
+		//将存储的操作数字符串整体转换为数字(atoi函数)
 		while (*c && !EEIn(*c, OP))
 		{
 			if (isdigit(*c))
@@ -635,20 +629,20 @@ Status EvaluateExpression(char *expression, int *result)
 		}
 		if (opnd_size)
 		{
-			EEOpndStackPush(&OPND, atoi(opnd));
+			EEOpndStackPush(&OPND, atoi(opnd));	//进操作数栈
 		}
 
-		switch (EEPrecede(EEOptrStackGetTop(&OPTR), *c))
+		switch (EEPrecede(EEOptrStackGetTop(&OPTR), *c))	//教材Precede函数返回字符'>','<','='表示比较结果,这里返回-1,0,1表示比较结果
 		{
-		case -1:
+		case -1:	//栈定元素优先权低
 			EEOptrStackPush(&OPTR, *c);
 			c++;
 			break;
-		case 0:
+		case 0:		//脱括号并接收下一字符
 			EEOptrStackPop(&OPTR);
 			c++;
 			break;
-		case 1:
+		case 1:		//退栈并将运算结果入栈
 			theta = EEOptrStackPop(&OPTR);
 			b = EEOpndStackPop(&OPND);
 			a = EEOpndStackPop(&OPND);

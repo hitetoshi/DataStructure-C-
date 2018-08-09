@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DataStructureC.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -10,8 +12,8 @@ extern "C"
 
 	typedef	struct _SQSTACK
 	{
-		ELEMENTNODE *base;
-		ELEMENTNODE *top;
+		ELEMENT *base;
+		ELEMENT *top;
 		int stacksize;
 		PALLOCATEROUTINE allocateroutine;
 		PFREEROUTINE freeroutine;
@@ -22,14 +24,14 @@ extern "C"
 	Status StackClear(SQSTACK *stack);
 	Status StackEmpty(SQSTACK *stack);
 	size_t StackLength(SQSTACK *stack);
-	Status StackGetTop(SQSTACK *stack, ELEMENTNODE *e);
-	Status StackPush(SQSTACK *stack, ELEMENTNODE *e);
-	Status StackPop(SQSTACK *stack, ELEMENTNODE *e);
+	Status StackGetTop(SQSTACK *stack, ELEMENT *e);
+	Status StackPush(SQSTACK *stack, ELEMENT *e);
+	Status StackPop(SQSTACK *stack, ELEMENT *e);
 	//遍历栈
 	//此函数对教材定义作了扩充,增加了一个可由调用者定义的参数param,
 	//StackTraverse将此参数传给回调函数visit,方便在类似迷宫求解问题中
 	//遍历栈查找给定元素是否存在的操作,可参考PrintMaze函数对它的用法
-	Status StackTraverse(SQSTACK *stack, Status(*visit)(ELEMENTNODE *e, void *param), void *param);
+	Status StackTraverse(SQSTACK *stack, Status(*visit)(ELEMENT *e, void *param), void *param);
 
 	//算法3.1
 	//输入十进制数num,转为base进制数并打印

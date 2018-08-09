@@ -2,7 +2,7 @@
 
 #include "DataStructureDemo.h"
 
-Status __cdecl linklist_print_value(ELEMENTNODE *elem)
+Status __cdecl linklist_print_value(ELEMENT *elem)
 {
 	//elem->size==0为头节点
 	if (elem->size >= sizeof(int) && elem->data)
@@ -15,7 +15,7 @@ Status __cdecl linklist_print_value(ELEMENTNODE *elem)
 bool InitOrderLinklist(LINKLIST *list, int length)
 {
 	bool ret = false;
-	ELEMENTNODE elem;
+	ELEMENT elem;
 	int v;
 
 	if (LinklistInit(list, CompareRoutine, AllocateRoutine, FreeRoutine) == OK)
@@ -34,7 +34,7 @@ bool InitOrderLinklist(LINKLIST *list, int length)
 
 bool InitRandomLinklist(LINKLIST *list, int length, int *max)
 {
-	ELEMENTNODE elem;
+	ELEMENT elem;
 	int v;
 	bool ret = false;
 	size_t pos;
@@ -71,7 +71,7 @@ void ShowLinklist()
 {
 	LINKLIST linklist1, linklist2, linklist3;
 	Status status;
-	ELEMENTNODE elem;
+	ELEMENT elem;
 	LINKLISTPOSITION p1, p2;
 	int max = 0;
 

@@ -17,7 +17,7 @@ void CreateRandomMaze(int **point, int x, int y)
 }
 
 //从迷宫栈中查找指定坐标是否已经存在
-Status MazeFindPos(ELEMENTNODE *node, void *param)
+Status MazeFindPos(ELEMENT *node, void *param)
 {
 	if (((COORDINATE *)param)->x == ((COORDINATE *)node->data)->x && ((COORDINATE *)param)->y == ((COORDINATE *)node->data)->y)
 	{
@@ -110,7 +110,7 @@ void GetPoint(COORDINATE *coord, int **point, int x, int y)
 
 void PrintMazePath(int **point, int x, int y, SQSTACK *path)
 {
-	ELEMENTNODE e;
+	ELEMENT e;
 	COORDINATE pos;
 
 	PrintMaze(point, x, y, path);
