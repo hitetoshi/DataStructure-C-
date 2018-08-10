@@ -58,6 +58,7 @@ void ShowHString()
 	QueryPerformanceCounter(&end_time);
 	us_time = (end_time.QuadPart - begin_time.QuadPart) * 1000000.0 / freq.QuadPart;
 	printf("模式匹配(KMP算法) 位置: %zd 时间: %f微秒\n", pos, us_time);
+	printf("\n如果在这里你发现KMP算法运行时间比较普通算法运行时间还要长,请参看HString.h文件最后关于KMP算法效率的讨论\n");
 
 	StrDestroy(&t1);
 	StrDestroy(&t2);

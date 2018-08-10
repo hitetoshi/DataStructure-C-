@@ -227,6 +227,8 @@ Status StrInsert(HString *s, size_t pos, HString *t)
 size_t StrIndex(HString *s, HString *t, size_t pos)
 {
 	size_t i, j;
+	int compare_count = 0;
+	int back_count = 0;
 
 	i = pos;
 	j = 0;
@@ -235,6 +237,7 @@ size_t StrIndex(HString *s, HString *t, size_t pos)
 	//最坏O(s->length*t->length)
 	while (i < s->length && j < t->length)
 	{
+		compare_count++;
 		if (s->ch[i] == t->ch[j])
 		{
 			//继续比较后继字节
@@ -246,6 +249,7 @@ size_t StrIndex(HString *s, HString *t, size_t pos)
 			//指针后退重新开始匹配
 			i = i - j + 1;
 			j = 0;
+			back_count++;
 		}
 	}
 	if (j >= t->length)
@@ -258,10 +262,10 @@ size_t StrIndex(HString *s, HString *t, size_t pos)
 	}
 }
 
-void KMP_Next(HString *t, int next[])
+void KMP_Next(HString *t, size_t next[])
 {
-	int i = 0;
-	int j = -1;
+	size_t i = 0;
+	size_t j = -1;
 
 	next[0] = -1;
 
@@ -280,10 +284,10 @@ void KMP_Next(HString *t, int next[])
 	}
 }
 
-void KMP_NextVal(HString *t, int next[])
+void KMP_NextVal(HString *t, size_t next[])
 {
-	int i = 0;
-	int j = -1;
+	size_t i = 0;
+	size_t j = -1;
 
 	next[0] = -1;
 
@@ -305,18 +309,22 @@ void KMP_NextVal(HString *t, int next[])
 size_t StrIndexKMP(HString *s, HString *t, size_t pos)
 {
 	size_t i, j;
-	int *next;
+	size_t *next;
+	int compare_count = 0;
+	int back_count = 0;
 
-	next = CMEM_ALOC(sizeof(int)*(t->length));
+	next = CMEM_ALOC(sizeof(size_t)*(t->length));
 	if (!next)
 	{
 		return -1;
 	}
+	//KMP_Next(t, next);
 	KMP_NextVal(t, next);
 	i = pos;
 	j = 0;
 	while (i < s->length && (j < t->length || j == -1))
 	{
+		compare_count++;
 		if (j == -1 || s->ch[i] == t->ch[j])
 		{
 			//继续比较后继字节
@@ -325,6 +333,8 @@ size_t StrIndexKMP(HString *s, HString *t, size_t pos)
 		}
 		else
 		{
+			back_count++;
+			//指针回退
 			j = next[j];
 		}
 	}

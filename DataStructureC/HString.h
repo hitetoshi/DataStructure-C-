@@ -43,9 +43,9 @@ extern "C"
 	//算法4.6模式匹配KMP算法
 	size_t StrIndexKMP(HString *s, HString *t, size_t pos);
 	//算法4.7求模式串t的next数组
-	void KMP_Next(HString *t, int next[]);
+	void KMP_Next(HString *t, size_t next[]);
 	//算法那4.8求模式串t的next修正数组
-	void KMP_NextVal(HString *t, int next[]);
+	void KMP_NextVal(HString *t, size_t next[]);
 	Status StrReplace(HString *s, HString *t, HString *v);
 	//算法4.4
 	Status StrInsert(HString *s, size_t pos, HString *t);
@@ -60,6 +60,43 @@ extern "C"
 	HSElem *StrPointer(HString *t);
 	//返回pos位置的字符,若位置非法,返回0
 	HSElem StrElem(HString *t, size_t pos);
+
+	/*****************************************************************************
+							关于KMP算法效率的讨论
+	理论上普通模式匹配算法的最差时间复杂度会达到O(n*m)而KMP算法保证时间复杂度为O(n+m)
+	但在实际应用中会发行KMP算法的执行时间远大于普通算法(差别可达10的数量级)
+	对模式匹配算法的时间复杂度都是选取"比较"操作作为基本操作
+
+	考察两种算法中"指针回退"的操作:
+	普通算法:
+	else
+	{
+		//指针后退重新开始匹配
+		i = i - j + 1;
+		j = 0;
+	}
+	编译器优化后的机器码为:
+	mov         ecx,1		//立即寻址
+	sub         ecx,esi		//寄存器寻址
+	add         eax,ecx		//寄存器寻址		i=i-j+1;
+	xor         esi,esi		//寄存器寻址		j=0;
+
+	KMP算法:
+	else
+	{
+		//指针回退
+		j = next[j];
+	}
+	编译器优化后的机器码为:
+	mov         eax,dword ptr [edi+eax*4]	//基址变址	j=next[j];
+
+	可见,反而是普通算法中立即寻址和寄存器寻址的速度要快的多,KMP算法必须使用一个内存中
+	的next表,只能以基址变址的寻址方式访问这在很大程度上影响了KMP算法的实际效率。
+	
+	通过此例可见,衡量算法优劣的指标不应仅限于时间复杂度和空间复杂度;还应考虑选择正确的
+	基本操作,教材中选择"比较"作为基本操作,归根结底两个串的"比较"还是对内存的访问(cmp指令
+	的开销比起基址变址寻址的开销可以忽略不计),因此,也应该考虑KMP算法对next表的内存访问。
+	*****************************************************************************/
 
 #ifdef __cplusplus
 }
