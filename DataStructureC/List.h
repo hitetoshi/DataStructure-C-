@@ -67,6 +67,10 @@ extern "C"
 	//链表节点操作的一组函数
 	//根据上下文和教材算法2.20理解,以下函数似乎只对链表节点做插入删除操作,并不
 	//实际分配和释放节点内存
+	//LinklistInsFirst,LinklistDelFirst这两个函数设计很不好,参数只有头节点,没有
+	//链表结构,在这两个函数内部不能对链表的长度和可能改变的尾指针进行修正,因此调用
+	//者必须自行修改链表长度(list->len),检查操作后链表长度是否为0,若为0,应修正链表
+	//尾指针
 	Status LinklistInsFirst(LINKNODE *h, PLINKNODE s);
 	Status LinklistDelFirst(LINKNODE *h, PLINKNODE *q);
 	Status LinklistAppend(LINKLIST *list, PLINKNODE s);
