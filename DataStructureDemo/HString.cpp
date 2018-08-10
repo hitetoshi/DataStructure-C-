@@ -38,12 +38,12 @@ void ShowHString()
 
 	StrAssign(&table, string_table);
 
-	str_len = RangeRandom(200, 300);	//生成200-300随机长度随机串
+	str_len = RangeRandom(300, 500);	//生成300-500随机长度随机串
 	RandomString(&table, str_len, &t1);
 	printf("随机生成长度 %d 串:\n%s\n", str_len, StrPointer(&t1));
 
-	pos = RangeRandom(0, str_len);
-	substr_len = RangeRandom(1,(int)StrLength(&t1) - (int)pos);
+	substr_len = RangeRandom(30, 50);	//随机生成30-50串长子串
+	pos = RangeRandom(0, str_len-substr_len);
 	StrSubString(&t2, &t1, pos, substr_len);
 	printf("\n随机截取长度 %zd 位置 %zd 子串:\n%s\n", substr_len, pos, StrPointer(&t2));
 
@@ -51,13 +51,20 @@ void ShowHString()
 	pos = StrIndex(&t1, &t2, 0);
 	QueryPerformanceCounter(&end_time);
 	us_time = (end_time.QuadPart - begin_time.QuadPart) * 1000000.0 / freq.QuadPart;
-	printf("\n模式匹配 位置: %zd 时间: %f微秒\n", pos, us_time);
+	printf("\n模式匹配 位置: %zd 时间: %f 微秒\n", pos, us_time);
 
 	QueryPerformanceCounter(&begin_time);
 	pos = StrIndexKMP(&t1, &t2, 0);
 	QueryPerformanceCounter(&end_time);
 	us_time = (end_time.QuadPart - begin_time.QuadPart) * 1000000.0 / freq.QuadPart;
-	printf("模式匹配(KMP算法) 位置: %zd 时间: %f微秒\n", pos, us_time);
+	printf("模式匹配(KMP算法) 位置: %zd 时间: %f 微秒\n", pos, us_time);
+
+	QueryPerformanceCounter(&begin_time);
+	pos = StrIndexKMPOpt(&t1, &t2, 0);
+	QueryPerformanceCounter(&end_time);
+	us_time = (end_time.QuadPart - begin_time.QuadPart) * 1000000.0 / freq.QuadPart;
+	printf("模式匹配(KMP算法优化) 位置: %zd 时间: %f 微秒\n", pos, us_time);
+
 	printf("\n如果在这里你发现KMP算法运行时间比较普通算法运行时间还要长,请参看HString.h文件最后关于KMP算法效率的讨论\n");
 
 	StrDestroy(&t1);
