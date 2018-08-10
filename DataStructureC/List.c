@@ -31,7 +31,7 @@ Status SqlistInsert(SQLIST *list, size_t pos, ELEMENT *elem)
 	}
 	if (list->length >= list->listsize)
 	{
-		new_base = CMEM_REALOC(list->elem, (list->length + LIST_INCREMENT) * sizeof(ELEMENT));
+		new_base = CMEM_REALLOC(list->elem, (list->length + LIST_INCREMENT) * sizeof(ELEMENT));
 		if (new_base)
 		{
 			list->elem = new_base;
@@ -252,7 +252,7 @@ Status SqlistMerge(SQLIST *la, SQLIST *lb, SQLIST *lc)
 	SqlistClear(lc);
 	lc->listsize = la->length + lb->length;
 	lc->length = 0;
-	new_node_base = CMEM_REALOC(lc->elem, lc->listsize * sizeof(ELEMENT));
+	new_node_base = CMEM_REALLOC(lc->elem, lc->listsize * sizeof(ELEMENT));
 	if (new_node_base)
 	{
 		lc->elem = new_node_base;

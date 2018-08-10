@@ -23,5 +23,10 @@ void ShowQueue()
 {
 	int TotalTime, CustomerNum;
 	Bank_Simulation(480, OnEvent,&TotalTime,&CustomerNum);
-	printf("总计处理客户: %d, 总计消耗时间: %d, 平均每用户时间: %.2f\n",CustomerNum, TotalTime, (float)TotalTime/(float)CustomerNum);
+	printf("\n客户到达银行最大时间间隔: %d\n"\
+		"每位客户办理业务最长时间: %d\n"\
+		"银行柜台数: %d\n"\
+		"模拟时间: %d\n"\
+		"总计处理客户: %d, 总计消耗时间: %d, 平均每用户时间: %.2f\n", MAX_INTERTIME, MAX_DURTIME,
+		QUEUE_COUNT, CustomerNum, TotalTime, 480, (float)TotalTime/(float)CustomerNum);
 }

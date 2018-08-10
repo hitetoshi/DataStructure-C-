@@ -39,7 +39,17 @@ WORD ConsoleTextColor(WORD wColor)
 void print_usage()
 {
 	printf("选择要演示的数据结构:\n\n");
-	printf("1:线性顺序表\n2:线性链表\n3:一元多项式运算\n4:栈(进制转换,括号匹配,行编辑,迷宫求解,表达式计算)\n5:队列(离散事件模拟)0:退出程序\n");
+	printf("1:线性表(线性顺序表,线性链表,一元多项式运算)\n"\
+		"2:栈(进制转换,括号匹配,行编辑,迷宫求解,表达式计算)\n"\
+		"3:队列(离散事件模拟)\n"\
+		"4:串(堆分配存储结构)\n"\
+		"\n0:退出程序\n");
+}
+
+void print_list()
+{
+	printf("选择要演示的线性表结构:\n");
+	printf("1:线性顺序表\n2:线性链表\n3:一元多项式运算\n");
 }
 
 void print_stack()
@@ -80,28 +90,36 @@ int main(int argc, char *argv[])
 		case 0:
 			return 0;
 		case 1:
-			ShowSqlist();
+			if (!cat)
+			{
+				printf("\n");
+				print_list();
+				while (scanf_s("%d", &cat) != 1 && cat < 1 || cat>3)
+				{
+					printf("输入错误,请重新输入:");
+					while ((c = getchar()) != EOF && c != '\n');
+				}
+			}
+			ShowList(cat);
 			break;
 		case 2:
-			ShowLinklist();
-			break;
-		case 3:
-			ShowPolynmail();
-			break;
-		case 4:
-			if(!cat)
+			if (!cat)
 			{
 				printf("\n");
 				print_stack();
-				while (scanf_s("%d", &cat) != 1 && cat < 1 || cat>4)
+				while (scanf_s("%d", &cat) != 1 && cat < 1 || cat>5)
 				{
 					printf("输入错误,请重新输入:");
 					while ((c = getchar()) != EOF && c != '\n');
 				}
 			}
 			ShowStack(cat);
-		case 5:
+			break;
+		case 3:
 			ShowQueue();
+			break;
+		case 4:
+			ShowHString();
 			break;
 		default:
 			break;

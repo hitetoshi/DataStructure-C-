@@ -167,7 +167,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DataStructureDemo.cpp" />
+    <ClCompile Include="HString.cpp" />
     <ClCompile Include="Linklist.cpp" />
+    <ClCompile Include="List.cpp" />
     <ClCompile Include="Polynmail.cpp" />
     <ClCompile Include="Queue.cpp" />
     <ClCompile Include="Sqlist.cpp" />

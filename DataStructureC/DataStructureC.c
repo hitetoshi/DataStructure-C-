@@ -15,16 +15,3 @@ void __cdecl CommonFreeRoutine(void *block)
 {
 	CMEM_FREE(block);
 }
-
-size_t _strlen(char *s)
-{
-	size_t i = 0;
-
-	while (s[i++]);
-	return i;
-}
-
-Status _isdigit(int c)
-{
-	return (c >= '0' && c <= '9');
-}

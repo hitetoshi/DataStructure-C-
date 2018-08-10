@@ -3,12 +3,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <memory.h>
+#include <ctype.h>
+#include <string.h>
 #include <time.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif // __cplusplus
+
+/*《数据机构（C语言
+*/
+
+	//一些基本的类型
 
 #define	TRUE	1
 #define	FALSE	0
@@ -17,8 +24,6 @@ extern "C"
 #define	INFEASIBLE	-1
 #define	OVERFLOW	-2
 #define	BUFFER_TOO_SMALL	-3
-
-	//一些基本的类型
 
 	typedef	int	Status;
 
@@ -93,21 +98,20 @@ extern "C"
 
 #define	CMEM_ALOC(size)				malloc(size)
 #define	CMEM_FREE(block)			free(block)
-#define	CMEM_REALOC(block, size)	realloc(block,size)
+#define	CMEM_REALLOC(block, size)	realloc(block,size)
 #define	CMEM_SET(block, v, size)	memset(block,v,size)
 #define	CMEM_COPY(dest,src,size)	memcpy(dest,src,size)
+#define	CMEM_MOVE(dest,src,size)	memmove(dest,src,size)
 
-#define	CSTRING_LENGTH(str)	_strlen(str)
+#define	CSTRING_LENGTH(str)	strlen(str)
 
-#define	CISDIGIT(c)		_isdigit(c)
+#define	CISDIGIT(c)		isdigit(c)
 #define	CTIME(_Time)	time(_Time)
 
 	//一些公用函数
 	void * __cdecl CommonAllocRotuine(size_t bytes);
 	void __cdecl CommonFreeRoutine(void *block);
 	int RangeRandom(int range_min, int range_max);
-	size_t _strlen(char *s);
-	Status _isdigit(int c);
 
 #ifdef __cplusplus
 }

@@ -74,7 +74,7 @@ Status StackPush(SQSTACK *stack, ELEMENT *e)
 
 	if (stack->top - stack->base >= stack->stacksize)
 	{
-		new_base = CMEM_REALOC(stack->base, (stack->stacksize + STACKINCREMENT)*sizeof(ELEMENT));
+		new_base = CMEM_REALLOC(stack->base, (stack->stacksize + STACKINCREMENT)*sizeof(ELEMENT));
 		if (!new_base)
 		{
 			return OVERFLOW;
