@@ -21,7 +21,8 @@ extern "C"
 
 	typedef	struct _HString
 	{
-		HSElem *ch;	//若是非空串,则按串长度分配存储区,否则ch为NULL
+		HSElem *ch;	//教材:若是非空串,则按串长度分配存储区,否则ch为NULL
+					//本例:若是空串,则ch[0]==0, length==0
 		size_t length;
 	}HString;
 
@@ -48,9 +49,12 @@ extern "C"
 	void KMP_Next(HString *t, size_t next[]);
 	//算法那4.8求模式串t的next修正数组
 	void KMP_NextVal(HString *t, size_t next[]);
+	//用v替换s中所有与t相等的不重叠的字串
 	Status StrReplace(HString *s, HString *t, HString *v);
 	//算法4.4
+	//在串第pos个字符之前插入串t
 	Status StrInsert(HString *s, size_t pos, HString *t);
+	//从串s中删除pos个字符起长度为len的子串
 	Status StrDelete(HString *s, size_t pos, size_t len);
 
 	//补充功能
@@ -98,13 +102,13 @@ extern "C"
 	通过此例可见,衡量算法优劣的指标不应仅限于时间复杂度和空间复杂度;还应考虑选择正确的
 	基本操作,教材中选择"比较"作为基本操作,本质上是两个串的"内存比较"。在内存比较操作中,
 	影响效率的关键因素应是"内存访问"而非"比较"(cmp指令的开销远低于基址变址寻址的开销),
-	虽然KMP算法的时间复杂度为O(n+m)但考虑每次失配都滑动模式串,在最坏的情况下,KMP算法
-	的基本操作频度为2n+m。
 
 	根据以上分析,本例对教材算法4.6做了一个极小的修改:不使用堆分配动态创建next数组,而采用
 	全局变量size_t g_next[1024],运行可以观察KMP算法效率有了很大提升,这时因为对全局数组
 	的访问使用相对寻址,速度比基址变址更快。
 	*****************************************************************************/
+
+	//关键词索引表
 
 #ifdef __cplusplus
 }

@@ -36,13 +36,24 @@ WORD ConsoleTextColor(WORD wColor)
 	return csbinfo.wAttributes;
 }
 
+void printf_color(WORD wColor, const char *format,...)
+{
+	WORD old = ConsoleTextColor(wColor);
+
+	va_list args;
+	va_start(args, format);
+
+	_vcprintf(format, args);
+	ConsoleTextColor(old);
+}
+
 void print_usage()
 {
 	printf("选择要演示的数据结构:\n\n");
 	printf("1:线性表(线性顺序表,线性链表,一元多项式运算)\n"\
 		"2:栈(进制转换,括号匹配,行编辑,迷宫求解,表达式计算)\n"\
 		"3:队列(离散事件模拟)\n"\
-		"4:串(堆分配存储结构)\n"\
+		"4:串(模式匹配,词索引表)\n"\
 		"\n0:退出程序\n");
 }
 
@@ -58,12 +69,19 @@ void print_stack()
 	printf("1:进制转换\n2:括号匹配\n3:行编辑\n4:迷宫求解\n5:表达式计算\n");
 }
 
+void print_hstring()
+{
+	printf("选择要演示的串结构:\n");
+	printf("1:模式匹配\n2:关键词索引表\n");
+}
+
 int main(int argc, char *argv[])
 {
 	int cmd = 0;
 	int cat = 0;
 	char c;
 
+	setlocale(LC_ALL, "zh-cn");
 	if (argc >= 2)
 	{
 		cmd = atoi(argv[1]);
@@ -119,7 +137,17 @@ int main(int argc, char *argv[])
 			ShowQueue();
 			break;
 		case 4:
-			ShowHString();
+			if (!cat)
+			{
+				printf("\n");
+				print_hstring();
+				while (scanf_s("%d", &cat) != 1 && cat < 1 || cat>2)
+				{
+					printf("输入错误,请重新输入:");
+					while ((c = getchar()) != EOF && c != '\n');
+				}
+			}
+			ShowHString(cat);
 			break;
 		default:
 			break;

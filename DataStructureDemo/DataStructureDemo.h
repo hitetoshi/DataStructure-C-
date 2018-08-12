@@ -17,9 +17,10 @@ void __cdecl FreeRoutine(void *Buffer);
 void *__cdecl AllocateRoutine(size_t ByteSize);
 
 WORD ConsoleTextColor(WORD wColor);
+void printf_color(WORD wColor, const char *format, ...);
 
 void ShowList(int cat);
-void ShowStack(int i);
+void ShowStack(int cat);
 void ShowQueue();
-void ShowHString();
+void ShowHString(int cat);
 

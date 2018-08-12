@@ -368,6 +368,8 @@ size_t StrIndexKMPOpt(HString *s, HString *t, size_t pos)
 			}
 			else
 			{
+				//内存访问优化,使用全局数组而非动态分配数组
+				//CPU将采用间接寻址而非基址变址寻址访问next表内容
 				j = g_next[j];
 			}
 		}
@@ -380,6 +382,36 @@ size_t StrIndexKMPOpt(HString *s, HString *t, size_t pos)
 	{
 		return -1;
 	}
+}
+
+Status StrReplace(HString *s, HString *t, HString *v)
+{
+	size_t pos=0;
+
+	while (pos = StrIndex(s, t, pos))
+	{
+		if (StrDelete(s, pos, t->length) != OK)
+		{
+			return ERROR;
+		}
+		if (StrInsert(s, pos, v) != OK)
+		{
+			return ERROR;
+		}
+	}
+	return OK;
+}
+
+Status StrDelete(HString *s, size_t pos, size_t len)
+{
+	if (pos<0 || pos>=s->length || pos + len >= s->length)
+	{
+		return ERROR;
+	}
+	CMEM_MOVE(s->ch + pos, s->ch + pos + len, len);
+	s->length -= len;
+	s->ch[s->length] = 0;
+	return OK;
 }
 
 HSElem *StrPointer(HString *t)

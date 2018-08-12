@@ -61,7 +61,7 @@ void PrintMaze(int **point, int x, int y, SQSTACK *path)
 					pos.y = j;
 					if (StackTraverse(path, MazeFindPos, &pos) == ERROR)
 					{
-						color = ConsoleTextColor(FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+						color = ConsoleTextColor(FOREGROUND_GREEN);
 					}
 				}
 				printf("■");
@@ -138,7 +138,8 @@ void ShowMaze()
 
 	x = RangeRandom(MAZE_MIN, MAZE_MAX);	//x->10-20随机
 	y = RangeRandom(MAZE_MIN, MAZE_MAX);	//y->10-20随机
-	printf("迷宫求解演示:\n随机生成%d×%d迷宫\r\n", x, y);
+	printf_color(FOREGROUND_GREEN, "迷宫求解演示:\n");
+	printf("随机生成%d×%d迷宫\r\n", x, y);
 	point = new int *[x];
 	if (point)
 	{
@@ -181,7 +182,7 @@ void ShowConversion()
 	int num;
 	char c;
 
-	printf("进制转换演示:\n请输入一个十进制数后回车:");
+	printf_color(FOREGROUND_GREEN,"进制转换演示:\n请输入一个十进制数后回车:");
 	while (scanf_s("%d", &num) != 1)
 	{
 		printf("输入错误,请重新输入:");
@@ -195,7 +196,7 @@ void ShowBrackets()
 {
 	char ch[1024];
 
-	printf("括号匹配演示:\n请任意输入括号()[]{}以回车结束:");
+	printf_color(FOREGROUND_GREEN, "括号匹配演示:\n请任意输入括号()[]{}以回车结束:");
 	scanf_s("%s", ch, 1024);
 	brackets(ch);
 }
@@ -204,7 +205,8 @@ void ShowLineEdit()
 {
 	char ch[1024];
 
-	printf("行编辑演示:\n从终端输入字符,\"#\"表示退格,\"@\"表示退行,输入EOF结束编辑\nWindows下输入EOF的方法是新起一行输入Ctrl-Z并回车:\n");
+	printf_color(FOREGROUND_GREEN, "行编辑演示:\n");
+	printf("从终端输入字符, \"#\"表示退格,\"@\"表示退行,输入EOF结束编辑\nWindows下输入EOF的方法是新起一行输入Ctrl-Z并回车:\n");
 	memset(ch, 0, sizeof(ch));
 	LineEdit(ch, _countof(ch));
 	printf("\n经编辑的用户输入:\n");
@@ -216,7 +218,8 @@ void ShowEvaluateExpression()
 	char expression[256];
 	int result;
 
-	printf("表达式计算演示:\n输入需要计算的表达式,支持+-*/()运算符:");
+	printf_color(FOREGROUND_GREEN, "表达式计算演示:\n");
+	printf("输入需要计算的表达式, 支持 + -*/ ()运算符:");
 	memset(expression, 0, sizeof(expression));
 	scanf_s("%s", expression, 256);
 	//加上结束符#
@@ -232,11 +235,11 @@ void ShowEvaluateExpression()
 	}
 }
 
-void ShowStack(int i)
+void ShowStack(int cat)
 {
 	srand((int)time(NULL));
 
-	switch (i)
+	switch (cat)
 	{
 	case 1:
 		ShowConversion();

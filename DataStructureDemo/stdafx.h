@@ -12,6 +12,7 @@
 #include <time.h>
 #include <string.h>
 #include <conio.h>
+#include <locale.h>
 
 // TODO: reference additional headers your program requires here
 #include <Windows.h>

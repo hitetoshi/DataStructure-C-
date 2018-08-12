@@ -75,7 +75,7 @@ void ShowSqlist()
 	size_t pos;
 	Status status;
 
-	printf("线性顺序表的演示\n\n");
+	printf_color(FOREGROUND_GREEN, "线性顺序表的演示\n\n");
 	srand((unsigned int)time(NULL));
 
 	if(InitRandomSqlist(&sqlist1, RangeRandom(STRUCTURE_SIZE_MIN, STRUCTURE_SIZE_MAX), &max))

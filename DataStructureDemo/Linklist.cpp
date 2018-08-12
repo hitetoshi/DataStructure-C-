@@ -75,7 +75,7 @@ void ShowLinklist()
 	LINKLISTPOSITION p1, p2;
 	int max = 0;
 
-	printf("线性链表的演示\n\n");
+	printf_color(FOREGROUND_GREEN,"线性链表的演示\n\n");
 	srand((unsigned int)time(NULL));
 
 	if (InitRandomLinklist(&linklist1, RangeRandom(STRUCTURE_SIZE_MIN, STRUCTURE_SIZE_MAX), &max))

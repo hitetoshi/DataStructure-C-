@@ -28,5 +28,5 @@ void ShowQueue()
 		"银行柜台数: %d\n"\
 		"模拟时间: %d\n"\
 		"总计处理客户: %d, 总计消耗时间: %d, 平均每用户时间: %.2f\n", MAX_INTERTIME, MAX_DURTIME,
-		QUEUE_COUNT, CustomerNum, TotalTime, 480, (float)TotalTime/(float)CustomerNum);
+		QUEUE_COUNT, 480, CustomerNum, TotalTime, (float)TotalTime/(float)CustomerNum);
 }

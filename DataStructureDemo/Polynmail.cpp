@@ -21,7 +21,7 @@ void ShowPolynmail()
 {
 	POLYNOMAIL polynmail1,polynmail2,polynmail3;
 
-	printf("一元多项式运算的演示\n\n");
+	printf_color(FOREGROUND_GREEN,"一元多项式运算的演示\n\n");
 	srand((unsigned int)time(NULL));
 	if (PolynCreate(&polynmail1, AllocateRoutine, FreeRoutine) == OK)
 	{
