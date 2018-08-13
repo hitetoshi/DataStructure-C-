@@ -682,7 +682,7 @@ Status CreateIdxList(SQLIST *idxlist)
 	InitCommonlyWorlist(&commwdlist);
 	InitIdxList(idxlist);
 
-	//本例从内存中早入图书信息,与教材从文件中载入没有太大的区别
+	//本例从内存载入图书信息,与教材从文件中载入没有太大的区别
 	for (i = 0; i < sizeof(book_info) / sizeof(char *); i++)
 	{
 		buf = book_info[i];								//依次读取书目信息到缓冲区buf
@@ -710,6 +710,7 @@ Status __cdecl traverse_free_idxlist(ELEMENT *elem)
 	//释放书号链表
 	CMEM_FREE(((IDXTERMTYPE *)elem->data)->bnolist.header->elem.data);
 	LinklistDestroy(&((IDXTERMTYPE *)elem->data)->bnolist);
+	return OK;
 }
 
 void DestroyIdxList(SQLIST *idxlist)
