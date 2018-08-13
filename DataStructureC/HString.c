@@ -169,7 +169,7 @@ Status StrCatc(HString *t, HSElem c)
 
 Status StrSubString(HString *sub, HString *s, size_t pos, size_t len)
 {
-	if (pos<0 || pos>=s->length || len<0 || len>=s->length-pos)
+	if (pos<0 || pos>=s->length || len<0 || len>s->length-pos)
 	{
 		return ERROR;
 	}
@@ -422,4 +422,298 @@ HSElem *StrPointer(HString *t)
 HSElem StrElem(HString *t, size_t pos)
 {
 	return (pos >= 0 && pos < t->length) ? t->ch[pos] : 0;
+}
+
+//关键词索引表
+
+char *book_info[] =
+{
+	"005 Computer Data Structures",
+	"010 Introduction to Data Structures",
+	"023 Fundamentals of Data Structures",
+	"034 The Design and Analysis of Computer Algorithms",
+	"050 Introduction to Numberical Analysis",
+	"067 Numberical Analysis"
+};
+
+char *commonly_word[] =
+{
+	"an","a","of","the","to","and"
+};
+
+int __cdecl IdxWordlistCompare(ELEMENT *first, ELEMENT *second)
+{
+	return StrCompare((HString *)first->data, (HString *)second->data);
+}
+
+Status ExtractKeyWord(char *buf, SQLIST *commwdlist, SQLIST *wdlist, int *BookNo)
+{
+	int count = 0;
+	ELEMENT e;
+	HString str;
+	size_t pos;
+	size_t start;
+	HString blank;
+	HString wd;
+	Status ret = ERROR;
+
+	StrInit(&str);
+	StrInit(&blank);
+	StrAssign(&str, buf);
+	CSTRING_LOWER(StrPointer(&str));	//字符串转换为小写
+	StrAssign(&blank, " ");
+	pos=StrIndex(&str, &blank, 0);
+	if (pos)
+	{
+		StrInit(&wd);
+		e.data = &wd;
+		e.size = sizeof(wd);
+		if (StrSubString(&wd, &str, 0, pos) == OK)
+		{
+			*BookNo = CSTRING_ATOI(StrPointer(&wd));
+			StrDestroy(&wd);
+			start = ++pos;
+			do
+			{
+				pos = StrIndex(&str, &blank, pos);
+				if (pos == -1)
+				{
+					pos = StrLength(&str);
+				}
+				StrInit(&wd);
+				e.data = &wd;
+				e.size = sizeof(wd);
+				if (StrSubString(&wd, &str, start, pos - start) == OK)
+				{
+					if (SqlistLocate(commwdlist, &e) == -1)	//排除常用词
+					{
+						SqlistOrderInsert(wdlist, &e);
+					}
+				}
+				else
+				{
+					StrDestroy(&wd);
+				}
+				start = ++pos;
+			} while (start<StrLength(&str));
+			ret = OK;
+		}
+		else
+		{
+			StrDestroy(&wd);
+		}
+	}
+	StrDestroy(&str);
+	StrDestroy(&blank);
+	return ret;
+}
+
+//初始化常用词表
+void InitCommonlyWorlist(SQLIST *commwdlist)
+{
+	ELEMENT e;
+	size_t i;
+	HString s;
+
+	for (i = 0; i < sizeof(commonly_word) / sizeof(char *); i++)
+	{
+		StrInit(&s);
+		e.data = &s;
+		e.size = sizeof(s);
+		StrAssign(&s, commonly_word[i]);
+		CSTRING_LOWER(StrPointer(&s));
+		SqlistOrderInsert(commwdlist, &e);
+	}
+}
+
+Status __cdecl free_hstring_list(ELEMENT *elem)
+{
+	StrDestroy((HString *)elem->data);
+	return OK;
+}
+
+void Freewdlist(SQLIST *wdlist)
+{
+	SqlistTraverse(wdlist, free_hstring_list);
+}
+
+int __cdecl IdxListCompare(ELEMENT *first, ELEMENT *second)
+{
+	return StrCompare(&((IDXTERMTYPE *)first->data)->key, &((IDXTERMTYPE *)second->data)->key);
+}
+
+Status InitIdxList(SQLIST *idxlist)
+{
+	if (SqlistInit(idxlist, IdxListCompare, CommonAllocRotuine, CommonFreeRoutine) != OK)
+	{
+		return ERROR;
+	}
+	return OK;
+}
+
+Status GetWord(SQLIST *wdlist, size_t i, HString **wd)
+{
+	ELEMENT e;
+
+	if (SqlistGetElem(wdlist, i, &e) == OK)
+	{
+		*wd = e.data;
+		return OK;
+	}
+	return ERROR;
+}
+
+Status InsertNewKey(SQLIST *idxlist, size_t i, HString *wd)
+{
+	Status status = ERROR;
+	IDXTERMTYPE idxelem;
+	ELEMENT e;
+	//教材重新定义了索引表数据类型,很多算法需要重新实现在插入索引表项之前需要先后移索引表其它项
+	//本例使用已经封装好的线性顺序表,直接调用其Insert操作即可
+	//可以使用SqlistInsert或SqlistOrderInsert,由于教材参数多给以个位置i,本例使用SqlistInsert
+	//由代码上下文可知,i本身也是有序的位置序号
+	StrInit(&idxelem.key);
+	StrCopy(&idxelem.key, wd);
+	if (LinklistInit(&idxelem.bnolist,
+		CommonIntCompareRoutine,		//书号链表的类型为int,可使用通用整型比较函数
+		CommonAllocRotuine, CommonFreeRoutine) == OK)
+	{
+		//有序链表需要为头结点分配内存
+		idxelem.bnolist.header->elem.data = CMEM_ALOC(sizeof(int));
+		if (idxelem.bnolist.header->elem.data)
+		{
+			idxelem.bnolist.header->elem.size = sizeof(int);
+			*((int *)idxelem.bnolist.header->elem.data) = -1;
+
+			e.data = &idxelem;
+			e.size = sizeof(idxelem);
+			status = SqlistInsert(idxlist, i, &e);
+			if (status != OK)
+			{
+				StrDestroy(&idxelem.key);
+				CMEM_FREE(idxelem.bnolist.header->elem.data);
+				LinklistDestroy(&idxelem.bnolist);
+			}
+		}
+		else
+		{
+			StrDestroy(&idxelem.key);
+			LinklistDestroy(&idxelem.bnolist);
+		}
+	}
+	else
+	{
+		StrDestroy(&idxelem.key);
+	}
+	return status;
+}
+
+Status InsertBook(SQLIST *idxlist, size_t i, int bno)
+{
+	ELEMENT elist;
+	ELEMENT ebook;
+
+	//与教材算法4.14不同,直接调用链表的LinklistOrderInsert操作插入数据
+	if (SqlistGetElem(idxlist, i, &elist) == OK)
+	{
+		ebook.data = &bno;
+		ebook.size = sizeof(bno);
+		return LinklistOrderInsert(&((IDXTERMTYPE *)elist.data)->bnolist, &ebook);
+	}
+	return ERROR;
+}
+
+Status InsertIdxList(SQLIST *idxlist, int bno, SQLIST *wdlist)
+{
+	HString *wd;
+	size_t i;
+	size_t pos;
+	ELEMENT e, *b;
+	IDXTERMTYPE idx;
+
+	StrInit(&idx.key);
+
+	for (i = 0; i < SqlistLength(wdlist); i++)
+	{
+		if (GetWord(wdlist, i, &wd) == OK)
+		{
+			StrCopy(&idx.key, wd);
+			e.data = &idx;
+			e.size = sizeof(idx);
+			//有序查找给定关键词在关键词索引中是否存在
+			//注意:教材用算法4.12实现查找,在第3个参数(Boolean类型)中返回元素是否存在
+			//除非在头文件中包含stdbool.h,否则Boolean类型是没有定义的
+			//本例直接使用有序链表的SqlistOrderLocate操作,第3个参数b返回这个元素,若元素不存在,则b为NULL
+			b = NULL;
+			pos = SqlistOrderLocate(idxlist, &e, &b);
+			if (!b)
+			{
+				if (InsertNewKey(idxlist, pos, wd) != OK)
+				{
+					continue;
+				}
+			}
+			InsertBook(idxlist, pos, bno);
+		}
+	}
+
+	StrDestroy(&idx.key);
+	return OK;
+}
+
+Status CreateIdxList(SQLIST *idxlist)
+{
+	SQLIST wdlist;		//词表
+	SQLIST commwdlist;	//常用词表
+	int BookNo;			//书号
+	size_t i;
+	char *buf;
+
+	if (!SqlistInit(&wdlist, IdxWordlistCompare, CommonAllocRotuine, CommonFreeRoutine) == OK)
+	{
+		return ERROR;
+	}
+	if (!SqlistInit(&commwdlist, IdxWordlistCompare, CommonAllocRotuine, CommonFreeRoutine) == OK)
+	{
+		SqlistDestroy(&wdlist);
+		return ERROR;
+	}
+
+	InitCommonlyWorlist(&commwdlist);
+	InitIdxList(idxlist);
+
+	//本例从内存中早入图书信息,与教材从文件中载入没有太大的区别
+	for (i = 0; i < sizeof(book_info) / sizeof(char *); i++)
+	{
+		buf = book_info[i];								//依次读取书目信息到缓冲区buf
+														//相当于算法4.9的GetLine
+		SqlistClear(&wdlist);
+		if (ExtractKeyWord(buf, &commwdlist, &wdlist, &BookNo) == OK)	//从buf提取关键词到词表,书号存入BookNo
+		{
+			InsertIdxList(idxlist, BookNo, &wdlist);	//将书号为BookNo的关键词插入索引表
+		}
+	}
+	//本例不将idxlist保存为文件,而是返回给调用者,以便调用者后续进行检索操作
+
+	Freewdlist(&commwdlist);
+	Freewdlist(&wdlist);
+	SqlistDestroy(&wdlist);
+	SqlistDestroy(&commwdlist);
+	return OK;
+}
+
+
+Status __cdecl traverse_free_idxlist(ELEMENT *elem)
+{
+	//释放关键词串
+	StrDestroy(&((IDXTERMTYPE *)elem->data)->key);
+	//释放书号链表
+	CMEM_FREE(((IDXTERMTYPE *)elem->data)->bnolist.header->elem.data);
+	LinklistDestroy(&((IDXTERMTYPE *)elem->data)->bnolist);
+}
+
+void DestroyIdxList(SQLIST *idxlist)
+{
+	SqlistTraverse(idxlist, traverse_free_idxlist);
+	SqlistDestroy(idxlist);
 }

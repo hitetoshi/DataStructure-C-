@@ -35,7 +35,8 @@ extern "C"
 	//算法2.6
 	size_t SqlistLocate(SQLIST *list, ELEMENT *elem);
 	//为实现有序顺序表增加的函数返回大于elem的第一个元素的位置
-	size_t SqlistOrderLocate(SQLIST *list, ELEMENT *elem);
+	//若有相等的元素存在,则b中返回该元素
+	size_t SqlistOrderLocate(SQLIST *list, ELEMENT *elem, ELEMENT **b);
 	Status SqlistPriorElem(SQLIST *list, ELEMENT *elem, ELEMENT *pre_elem);
 	Status SqlistNextElem(SQLIST *list, ELEMENT *elem, ELEMENT *pre_elem);
 	//算法2.5

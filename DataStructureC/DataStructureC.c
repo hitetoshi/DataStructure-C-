@@ -15,3 +15,8 @@ void __cdecl CommonFreeRoutine(void *block)
 {
 	CMEM_FREE(block);
 }
+
+int __cdecl CommonIntCompareRoutine(ELEMENT *first, ELEMENT *second)
+{
+	return *((int *)first->data) - *((int *)second->data);
+}

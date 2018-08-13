@@ -92,6 +92,23 @@ extern "C"
 		int y;	//y坐标
 	}COORDINATE,*PCOORDINATE;
 
+	//本例中大部分数据结构的初始化操作都需要调用者提供三个回调函数作为参数
+
+	//1.PCOMPAREROUTINE:数据项比较函数,由于数据结构使用的数据类型为抽象类型
+	//当数据需要进行比较操作(如定位、排序)时,就需要调用者提供比较函数,如果在
+	//每个这样的操作中都由调用者传入比较函数,则比较繁琐。故在数据结构初始化
+	//时,由调用者传入,数据结构将这个回调函数存在结构内部,需要使用时直接调用
+
+	//2.PALLOCATEROUTINE/PFREEROUTINE内存分配和释放函数:当调用者于不同的编程
+	//环境中调用数据结构时,可能会根据实际情况自定义内存的分配和释放操作(如
+	//C++中可使用new/delete分配、释放内存；WIN 32环境下可使用HeapAlloc/HeapFree
+	//分配、释放内存；WDK环境下用ExAllocatePoolWithTag/ExFreePoolWithTag分配、
+	//释放内存)调用者根据自己实际使用情况在初始化数据结构时传入内存分配、释放
+	//的回调函数,当需要时,结构会按照调用者提供的方法进行操作
+
+	//同理,当对数据结构进行移植时,数据结构管理自身内存和其他操作的库函数可能也
+	//会有不同,可直接修改下面定义的CMEM_ALOC、CMEM_FREE等宏进行适配
+
 	typedef	int (__cdecl *PCOMPAREROUTINE)(ELEMENT *firstelem, ELEMENT *secondelem);
 	typedef	void * (__cdecl *PALLOCATEROUTINE)(size_t bytesize);
 	typedef	void(__cdecl *PFREEROUTINE)(void *buffer);
@@ -104,6 +121,8 @@ extern "C"
 #define	CMEM_MOVE(dest,src,size)	memmove(dest,src,size)
 
 #define	CSTRING_LENGTH(str)	strlen(str)
+#define	CSTRING_LOWER(str)	_strlwr_s(str,CSTRING_LENGTH(str)+1)
+#define	CSTRING_ATOI(str)	atoi(str)
 
 #define	CISDIGIT(c)		isdigit(c)
 #define	CTIME(_Time)	time(_Time)
@@ -112,6 +131,8 @@ extern "C"
 	void * __cdecl CommonAllocRotuine(size_t bytes);
 	void __cdecl CommonFreeRoutine(void *block);
 	int RangeRandom(int range_min, int range_max);
+	//通用整型数据类型比较函数
+	int __cdecl CommonIntCompareRoutine(ELEMENT *first, ELEMENT *second);
 
 #ifdef __cplusplus
 }

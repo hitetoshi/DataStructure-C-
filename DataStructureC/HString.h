@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DataStructureC.h"
+#include "List.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -108,7 +109,83 @@ extern "C"
 	的访问使用相对寻址,速度比基址变址更快。
 	*****************************************************************************/
 
+
 	//关键词索引表
+
+/*教材定义的各项常数,基本上用不上,因为本例使用的堆分配结构串、顺序表、链表都
+可以动态分配内存,不需要设定最大长度
+
+#define	MAX_BOOK_NUM	1000	//假设只对1000本书建索引表
+#define	MAX_KEY_NUM		2500	//索引表最大容量
+#define	MAX_LIN_LEN		500		//书目串的最大长度
+#define	MAX_WORD_NUM	10		//词表的最大容量
+*/
+
+	/*教材上对词表数据类型的定义
+	本例没有采用这一的定义,而是将词表的数据类型定义为HString:
+	一是为了本节内容活学活用
+	二是顺序表的元素类型本来就为void *,只需要在本例中将其解释为HString *即可,无需另外定义
+	根据教材定义,词表只能是定长表
+	typedef	struct
+	{
+		char *item[];
+		int last;
+	}WordListType;*/
+
+	//将书号链表类型定义为int,没有必要定义,只需要在本应用中将
+	//链表ELEMENT.data解释为int *即可
+	//typedef	int ElemType;
+
+	//索引项类型
+	typedef	struct
+	{
+		HString key;		//关键词
+		LINKLIST bnolist;	//存放书号索引的链表
+	}IDXTERMTYPE;
+
+	/*教材上对索引表类型的定义
+	本例没有采用这一定义,使用SQLIST作为索引表结构
+	将ELEMENT.data类型解释为IDXTERMTYPE *
+	因本例采用的顺序表为动态表,所以没有表长限制
+	typedef	struct
+	{
+		IDXTERMTYPE item[MAX_KEY_NUM];
+		int last;
+	}IdxListType;*/
+
+	//创建索引表,相当于教材算法4.9main函数idxlist为线性顺序表
+	Status CreateIdxList(SQLIST *idxlist);
+	void DestroyIdxList(SQLIST *idxlist);
+
+	//初始化操作,置索引表idxlist为空表
+	//注意:与教材不同,利用已经封装好的线性表结构,没有必要将idxlist.item[0]设为一空串
+	Status InitIdxList(SQLIST *idxlist);
+	//算法4.10将书号为bno的书名关键词按词典顺序插入索引表idxlist
+	Status InsertIdxList(SQLIST *idxlist, int bno, SQLIST *wdlist);
+	//算法4.11用wd返回词表wdlist中第i个关键词
+	Status GetWord(SQLIST *wdlist, size_t i, HString **wd);
+
+	//算法4.13在索引表idxlist第i项上插入新关键词wd并初始化书号索引的链表为空表
+	//因为多处内存分配操作,还是修改返回值类型为Status为宜
+	Status InsertNewKey(SQLIST *idxlist, size_t i, HString *wd);
+	//算法4.14在索引表idxlist的第i项中插入书号为bno的索引
+	Status InsertBook(SQLIST *idxlist, size_t i, int bno);
+
+	//索引表的比较函数
+	//算法4.12使用Locate函数遍历索引表查找关键词是否存在
+	//本例在索引表初始化时,使用IdxListCompare作为compare函数
+	//则可以使用线性表的SqlistOrderLocate操作来查询关键词
+	int __cdecl IdxListCompare(ELEMENT *first, ELEMENT *second);
+
+	/*****************************************************************************
+								关键词索引表的讨论
+	
+	通过此例我们体会到,先前我们数据结构的数据类型定义为抽象的void *并且在结构的初
+	始化操作中增加了Compare函数,使得我们使用这些数据结构的时候不需要再重新定义数据
+	类型,针对特定数据类型的操作(查找、定位、数据移动等)都不需要重写代码。这大大减
+	轻了我们代码的编写量,增加了数据结构重用的效率。
+	*****************************************************************************/
+	
 
 #ifdef __cplusplus
 }

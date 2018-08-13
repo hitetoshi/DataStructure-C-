@@ -94,24 +94,72 @@ void ShowIndex()
 	StrDestroy(&table);
 }
 
-const char *book_info[]=
+Status __cdecl traverse_print_bno(ELEMENT *elem)
 {
-	"005 Computer Data Structures",
-	"010 Introduction to Data Structures",
-	"023 Fundamentals of Data Structures",
-	"034 The Design and Analysis of Computer Algorithms",
-	"050 Introduction to Numberical Analysis",
-	"067 Numberical Analysis"
-};
+	printf("%03d,", *((int *)elem->data));
+	return OK;
+}
 
-const char *commonly_word[] =
+Status __cdecl traverse_print_idxlist(ELEMENT *elem)
 {
-	"an","a","of","the","to","and"
-};
+	CONSOLE_SCREEN_BUFFER_INFO Info;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &Info);
+
+	Info.dwCursorPosition.X += 2;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Info.dwCursorPosition);
+	printf("%s",StrPointer(&((IDXTERMTYPE *)elem->data)->key));
+	Info.dwCursorPosition.X += 2+15;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Info.dwCursorPosition);
+	LinklistTraverse(&((IDXTERMTYPE *)elem->data)->bnolist, traverse_print_bno);
+	printf("\b \n");
+	return OK;
+}
+
+void print_idxlist(SQLIST *idxlist)
+{
+	CONSOLE_SCREEN_BUFFER_INFO Info;
+
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &Info);
+	Info.dwCursorPosition.X += 5;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Info.dwCursorPosition);
+	printf("关键词");
+	Info.dwCursorPosition.X += 15;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Info.dwCursorPosition);
+	printf("书号索引\n");
+	SqlistTraverse(idxlist, traverse_print_idxlist);
+}
 
 void ShowKeywordIndex()
 {
-	printf_color(FOREGROUND_GREEN, "关键词索引表演示:\n");
+	SQLIST idxlist;
+	char text[1024];
+	IDXTERMTYPE idx;
+	ELEMENT e;
+	size_t pos;
+	
+	printf_color(FOREGROUND_GREEN, "关键词索引表演示:\n\n");
+
+	if (CreateIdxList(&idxlist) == OK)
+	{
+		print_idxlist(&idxlist);
+		StrInit(&idx.key);
+		do
+		{
+			printf("输入关键词检索书号(\"exit\"退出):\n");
+			scanf_s("%s", text, 1024);
+			StrAssign(&idx.key, text);
+			e.data = &idx;
+			e.size = sizeof(idx);
+			pos = SqlistLocate(&idxlist, &e);
+			if (pos != -1)
+			{
+				SqlistGetElem(&idxlist, pos, &e);
+				traverse_print_idxlist(&e);
+			}
+		} while (_stricmp(text, "exit") != 0);
+		StrDestroy(&idx.key);
+		DestroyIdxList(&idxlist);
+	}
 }
 
 void ShowHString(int cat)

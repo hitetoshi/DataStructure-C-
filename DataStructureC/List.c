@@ -67,7 +67,7 @@ Status SqlistInsert(SQLIST *list, size_t pos, ELEMENT *elem)
 
 Status SqlistOrderInsert(SQLIST *list, ELEMENT *elem)
 {
-	size_t pos = SqlistOrderLocate(list, elem);
+	size_t pos = SqlistOrderLocate(list, elem, NULL);
 
 	return SqlistInsert(list, pos, elem);
 }
@@ -137,15 +137,28 @@ size_t SqlistLocate(SQLIST *list, ELEMENT *elem)
 	return -1;
 }
 
-size_t SqlistOrderLocate(SQLIST *list, ELEMENT *elem)
+size_t SqlistOrderLocate(SQLIST *list, ELEMENT *elem, ELEMENT **b)
 {
 	size_t pos;
+	int result;
 
+	if (b)
+	{
+		*b = NULL;
+	}
 	//O(list->length)
 	for (pos = 0; pos < list->length; pos++)
 	{
-		if (list->compareroutine(elem, list->elem + pos) <= 0)
+		result = list->compareroutine(elem, list->elem + pos);
+		if (result <= 0)
 		{
+			if (result == 0)
+			{
+				if (b)
+				{
+					*b = list->elem + pos;
+				}
+			}
 			return pos;
 		}
 	}
