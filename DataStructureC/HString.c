@@ -1,6 +1,6 @@
 #include "HString.h"
 
-void StrInit(HString *t)
+void StrInit(HSTRING *t)
 {
 	t->ch = CMEM_ALOC(sizeof(HSElem));
 	if (t->ch)
@@ -10,7 +10,7 @@ void StrInit(HString *t)
 	t->length = 0;
 }
 
-Status StrAssign(HString *t, HSElem *chars)
+Status StrAssign(HSTRING *t, HSElem *chars)
 {
 	size_t i;
 	if (t->ch)
@@ -37,7 +37,7 @@ Status StrAssign(HString *t, HSElem *chars)
 	return OK;
 }
 
-Status StrCopy(HString *t, HString *s)
+Status StrCopy(HSTRING *t, HSTRING *s)
 {
 	if (t->ch)
 	{
@@ -57,17 +57,17 @@ Status StrCopy(HString *t, HString *s)
 	}
 }
 
-Status StrEmpty(HString *s)
+Status StrEmpty(HSTRING *s)
 {
 	return (s->length == 0);
 }
 
-size_t StrLength(HString *s)
+size_t StrLength(HSTRING *s)
 {
 	return s->length;
 }
 
-int StrCompare(HString *s, HString *t)
+int StrCompare(HSTRING *s, HSTRING *t)
 {
 	size_t i;
 
@@ -81,7 +81,7 @@ int StrCompare(HString *s, HString *t)
 	return (int)(s->length - t->length);
 }
 
-Status StrClear(HString *s)
+Status StrClear(HSTRING *s)
 {
 	if (s->ch)
 	{
@@ -91,7 +91,7 @@ Status StrClear(HString *s)
 	return OK;
 }
 
-Status StrDestroy(HString *s)
+Status StrDestroy(HSTRING *s)
 {
 	if (s->ch)
 	{
@@ -102,7 +102,7 @@ Status StrDestroy(HString *s)
 	return OK;
 }
 
-Status StrConcat(HString *t, HString *s1, HString *s2)
+Status StrConcat(HSTRING *t, HSTRING *s1, HSTRING *s2)
 {
 	if (t->ch)
 	{
@@ -120,7 +120,7 @@ Status StrConcat(HString *t, HString *s1, HString *s2)
 	return OK;
 }
 
-Status StrCat(HString *t, HString *s)
+Status StrCat(HSTRING *t, HSTRING *s)
 {
 	HSElem *new_buffer;
 
@@ -144,7 +144,7 @@ Status StrCat(HString *t, HString *s)
 	return OK;
 }
 
-Status StrCatc(HString *t, HSElem c)
+Status StrCatc(HSTRING *t, HSElem c)
 {
 	HSElem *new_buffer;
 
@@ -167,7 +167,7 @@ Status StrCatc(HString *t, HSElem c)
 	return OK;
 }
 
-Status StrSubString(HString *sub, HString *s, size_t pos, size_t len)
+Status StrSubString(HSTRING *sub, HSTRING *s, size_t pos, size_t len)
 {
 	if (pos<0 || pos>=s->length || len<0 || len>s->length-pos)
 	{
@@ -197,7 +197,7 @@ Status StrSubString(HString *sub, HString *s, size_t pos, size_t len)
 	}
 }
 
-Status StrInsert(HString *s, size_t pos, HString *t)
+Status StrInsert(HSTRING *s, size_t pos, HSTRING *t)
 {
 	HSElem *new_buffer;
 
@@ -224,7 +224,7 @@ Status StrInsert(HString *s, size_t pos, HString *t)
 	return OK;
 }
 
-size_t StrIndex(HString *s, HString *t, size_t pos)
+size_t StrIndex(HSTRING *s, HSTRING *t, size_t pos)
 {
 	size_t i, j;
 
@@ -258,7 +258,7 @@ size_t StrIndex(HString *s, HString *t, size_t pos)
 	}
 }
 
-void KMP_Next(HString *t, size_t next[])
+void KMP_Next(HSTRING *t, size_t next[])
 {
 	size_t i = 0;
 	size_t j = -1;
@@ -280,7 +280,7 @@ void KMP_Next(HString *t, size_t next[])
 	}
 }
 
-void KMP_NextVal(HString *t, size_t next[])
+void KMP_NextVal(HSTRING *t, size_t next[])
 {
 	size_t i = 0;
 	size_t j = -1;
@@ -302,7 +302,7 @@ void KMP_NextVal(HString *t, size_t next[])
 	}
 }
 
-size_t StrIndexKMP(HString *s, HString *t, size_t pos)
+size_t StrIndexKMP(HSTRING *s, HSTRING *t, size_t pos)
 {
 	size_t i, j;
 	size_t *next;
@@ -344,7 +344,7 @@ size_t StrIndexKMP(HString *s, HString *t, size_t pos)
 
 static size_t g_next[1024];
 
-size_t StrIndexKMPOpt(HString *s, HString *t, size_t pos)
+size_t StrIndexKMPOpt(HSTRING *s, HSTRING *t, size_t pos)
 {
 	size_t i, j;
 
@@ -384,7 +384,7 @@ size_t StrIndexKMPOpt(HString *s, HString *t, size_t pos)
 	}
 }
 
-Status StrReplace(HString *s, HString *t, HString *v)
+Status StrReplace(HSTRING *s, HSTRING *t, HSTRING *v)
 {
 	size_t pos=0;
 
@@ -402,7 +402,7 @@ Status StrReplace(HString *s, HString *t, HString *v)
 	return OK;
 }
 
-Status StrDelete(HString *s, size_t pos, size_t len)
+Status StrDelete(HSTRING *s, size_t pos, size_t len)
 {
 	if (pos<0 || pos>=s->length || pos + len >= s->length)
 	{
@@ -414,12 +414,12 @@ Status StrDelete(HString *s, size_t pos, size_t len)
 	return OK;
 }
 
-HSElem *StrPointer(HString *t)
+HSElem *StrPointer(HSTRING *t)
 {
 	return t->ch;
 }
 
-HSElem StrElem(HString *t, size_t pos)
+HSElem StrElem(HSTRING *t, size_t pos)
 {
 	return (pos >= 0 && pos < t->length) ? t->ch[pos] : 0;
 }
@@ -443,18 +443,18 @@ char *commonly_word[] =
 
 int __cdecl IdxWordlistCompare(ELEMENT *first, ELEMENT *second)
 {
-	return StrCompare((HString *)first->data, (HString *)second->data);
+	return StrCompare((HSTRING *)first->data, (HSTRING *)second->data);
 }
 
 Status ExtractKeyWord(char *buf, SQLIST *commwdlist, SQLIST *wdlist, int *BookNo)
 {
 	int count = 0;
 	ELEMENT e;
-	HString str;
+	HSTRING str;
 	size_t pos;
 	size_t start;
-	HString blank;
-	HString wd;
+	HSTRING blank;
+	HSTRING wd;
 	Status ret = ERROR;
 
 	StrInit(&str);
@@ -513,7 +513,7 @@ void InitCommonlyWorlist(SQLIST *commwdlist)
 {
 	ELEMENT e;
 	size_t i;
-	HString s;
+	HSTRING s;
 
 	for (i = 0; i < sizeof(commonly_word) / sizeof(char *); i++)
 	{
@@ -528,7 +528,7 @@ void InitCommonlyWorlist(SQLIST *commwdlist)
 
 Status __cdecl free_hstring_list(ELEMENT *elem)
 {
-	StrDestroy((HString *)elem->data);
+	StrDestroy((HSTRING *)elem->data);
 	return OK;
 }
 
@@ -551,7 +551,7 @@ Status InitIdxList(SQLIST *idxlist)
 	return OK;
 }
 
-Status GetWord(SQLIST *wdlist, size_t i, HString **wd)
+Status GetWord(SQLIST *wdlist, size_t i, HSTRING **wd)
 {
 	ELEMENT e;
 
@@ -563,7 +563,7 @@ Status GetWord(SQLIST *wdlist, size_t i, HString **wd)
 	return ERROR;
 }
 
-Status InsertNewKey(SQLIST *idxlist, size_t i, HString *wd)
+Status InsertNewKey(SQLIST *idxlist, size_t i, HSTRING *wd)
 {
 	Status status = ERROR;
 	IDXTERMTYPE idxelem;
@@ -625,7 +625,7 @@ Status InsertBook(SQLIST *idxlist, size_t i, int bno)
 
 Status InsertIdxList(SQLIST *idxlist, int bno, SQLIST *wdlist)
 {
-	HString *wd;
+	HSTRING *wd;
 	size_t i;
 	size_t pos;
 	ELEMENT e, *b;

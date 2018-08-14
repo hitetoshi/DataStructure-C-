@@ -20,53 +20,53 @@ extern "C"
 	typedef	char	HSElem;
 #define	HSElem_Len(s)	CSTRING_LENGTH(s)
 
-	typedef	struct _HString
+	typedef	struct _HSTRING
 	{
 		HSElem *ch;	//教材:若是非空串,则按串长度分配存储区,否则ch为NULL
 					//本例:若是空串,则ch[0]==0, length==0
 		size_t length;
-	}HString;
+	}HSTRING;
 
-	void StrInit(HString *t);
-	Status StrDestroy(HString *s);
-	Status StrClear(HString *s);
-	Status StrAssign(HString *t, HSElem *chars);
-	Status StrCopy(HString *t, HString *s);
-	Status StrEmpty(HString *s);
-	int StrCompare(HString *s, HString *t);
-	size_t StrLength(HString *s);
+	void StrInit(HSTRING *t);
+	Status StrDestroy(HSTRING *s);
+	Status StrClear(HSTRING *s);
+	Status StrAssign(HSTRING *t, HSElem *chars);
+	Status StrCopy(HSTRING *t, HSTRING *s);
+	Status StrEmpty(HSTRING *s);
+	int StrCompare(HSTRING *s, HSTRING *t);
+	size_t StrLength(HSTRING *s);
 	//将s1和s2连接后存入新串t
-	Status StrConcat(HString *t, HString *s1, HString *s2);
+	Status StrConcat(HSTRING *t, HSTRING *s1, HSTRING *s2);
 	//算法4.3返回串s位置pos起长度为len的子串
-	Status StrSubString(HString *sub, HString *s, size_t pos, size_t len);
+	Status StrSubString(HSTRING *sub, HSTRING *s, size_t pos, size_t len);
 	//算法4.5的改进,由定长顺序结构串改进到堆分配结构串
 	//若子串不存在,返回-1
-	size_t StrIndex(HString *s, HString *t, size_t pos);
+	size_t StrIndex(HSTRING *s, HSTRING *t, size_t pos);
 	//算法4.6模式匹配KMP算法
-	size_t StrIndexKMP(HString *s, HString *t, size_t pos);
+	size_t StrIndexKMP(HSTRING *s, HSTRING *t, size_t pos);
 	//对算法4.6的轻微改进不动态分配改用全局数组作为next表,优化对next表访问性能
-	size_t StrIndexKMPOpt(HString *s, HString *t, size_t pos);
+	size_t StrIndexKMPOpt(HSTRING *s, HSTRING *t, size_t pos);
 	//算法4.7求模式串t的next数组
-	void KMP_Next(HString *t, size_t next[]);
+	void KMP_Next(HSTRING *t, size_t next[]);
 	//算法那4.8求模式串t的next修正数组
-	void KMP_NextVal(HString *t, size_t next[]);
+	void KMP_NextVal(HSTRING *t, size_t next[]);
 	//用v替换s中所有与t相等的不重叠的字串
-	Status StrReplace(HString *s, HString *t, HString *v);
+	Status StrReplace(HSTRING *s, HSTRING *t, HSTRING *v);
 	//算法4.4
 	//在串第pos个字符之前插入串t
-	Status StrInsert(HString *s, size_t pos, HString *t);
+	Status StrInsert(HSTRING *s, size_t pos, HSTRING *t);
 	//从串s中删除pos个字符起长度为len的子串
-	Status StrDelete(HString *s, size_t pos, size_t len);
+	Status StrDelete(HSTRING *s, size_t pos, size_t len);
 
 	//补充功能
 	//将串s连接到t之后
-	Status StrCat(HString *t, HString *s);
+	Status StrCat(HSTRING *t, HSTRING *s);
 	//将字符c连接到t之后
-	Status StrCatc(HString *t, HSElem c);
+	Status StrCatc(HSTRING *t, HSElem c);
 	//返回HSElem指针(方便C代码使用)
-	HSElem *StrPointer(HString *t);
+	HSElem *StrPointer(HSTRING *t);
 	//返回pos位置的字符,若位置非法,返回0
-	HSElem StrElem(HString *t, size_t pos);
+	HSElem StrElem(HSTRING *t, size_t pos);
 
 	/*****************************************************************************
 							关于KMP算法效率的讨论
@@ -139,7 +139,7 @@ extern "C"
 	//索引项类型
 	typedef	struct
 	{
-		HString key;		//关键词
+		HSTRING key;		//关键词
 		LINKLIST bnolist;	//存放书号索引的链表
 	}IDXTERMTYPE;
 
@@ -163,11 +163,11 @@ extern "C"
 	//算法4.10将书号为bno的书名关键词按词典顺序插入索引表idxlist
 	Status InsertIdxList(SQLIST *idxlist, int bno, SQLIST *wdlist);
 	//算法4.11用wd返回词表wdlist中第i个关键词
-	Status GetWord(SQLIST *wdlist, size_t i, HString **wd);
+	Status GetWord(SQLIST *wdlist, size_t i, HSTRING **wd);
 
 	//算法4.13在索引表idxlist第i项上插入新关键词wd并初始化书号索引的链表为空表
 	//因为多处内存分配操作,还是修改返回值类型为Status为宜
-	Status InsertNewKey(SQLIST *idxlist, size_t i, HString *wd);
+	Status InsertNewKey(SQLIST *idxlist, size_t i, HSTRING *wd);
 	//算法4.14在索引表idxlist的第i项中插入书号为bno的索引
 	Status InsertBook(SQLIST *idxlist, size_t i, int bno);
 

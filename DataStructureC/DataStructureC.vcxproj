@@ -138,6 +138,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Array.c" />
     <ClCompile Include="DataStructureC.c" />
     <ClCompile Include="HString.c" />
     <ClCompile Include="List.c" />
@@ -145,6 +146,7 @@
     <ClCompile Include="Stack.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Array.h" />
     <ClInclude Include="DataStructureC.h" />
     <ClInclude Include="HString.h" />
     <ClInclude Include="List.h" />

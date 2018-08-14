@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <memory.h>
 #include <ctype.h>
@@ -12,8 +13,66 @@ extern "C"
 {
 #endif // __cplusplus
 
-/*《数据机构（C语言
-*/
+	/*****************************************************************************
+	*《数据结构（C语言版）》所有数据结构和算法的C语言实现
+
+	DataStructureC静态库基本上实现了《数据结构（C语言版）》的所有数据结构和算法。
+
+	部分数据结构的不同类型（如链栈、双向队列、循环队列等）因为已经实现能反应结构特
+	的主要部分且该类型的原理在其它结构已经有所展示所以不再用代码重复实现。
+
+	//////////////////////////////////////////////////////////////////////////////
+	以编程的简便和算法为实际应用的原则出发，DataStructureC的代码与教材存在一些差异：
+
+	1.教材认为C语言下标以0开始使用自然语言描述不甚方便，因此教材中所有下标均从1开始
+	（如：各种结构元素定位函数返回的元素位置）；但以1作为下标起始在实际C语言编程中更
+	加不方便（如：C语言访问数组均从0下标开始）。因此，DataStructureC对所有下标的使用
+	均从0开始，这可能导致某些算法的代码与教材的语言描述不一致甚至有较大差别（如：求
+	KMP算法的next数组函数）
+
+	2.教材对数据结构操作的定义使用了大量了C++中的“引用（&）”传递参数，这是C语言不
+	支持的，DataStructureC将这些引用传参改为了C语言支持的“按地址传参（*）”。
+
+	3.教材对某些结构和函数的命名不是很统一,命名没有特殊性,容易与C标准库或第三方库形
+	成冲突。DataStructureC统一结构和类型定义为全大写（如LINKLIST，STACK，HSTRING）；
+	操作方法（函数）为“结构名+操作名”（如SqlistInit，StrIndex）；参数全小写（特殊
+	情况除外）
+
+	4.一些其它的，作者认为在实际编程中不合理或者不方便的地方，如：
+	1）大量使用全局变量在函数之间传递数据：离散事件模式。DataStructureC通过增加函数调
+	用参数，以参数传递数据。
+	2）在算法内部分配了内存但是不释放的：链表归并。根据“谁分配谁释放”的原则，如果该
+	内存需要交给调用者使用，则DataStructureC不在算法中分配该内存，而是要求调用者自行
+	分配后通过参数传递给算法。
+	3）函数接口封装不友好的：数组结构中使用可变参数传递各维长度和各维下标，如果调用者
+	需要初始化一个维度很大的数组在函数调用时需要传递的参数太多；多项式求值和表达式求值
+	要求用户在算法内部输入数据，算法基本上无法移植。DataStructureC在不改变原算法的基础
+	上将函数接口封装的更加友好更加有利于移植。
+	4）某些描述不详尽或者可能产生Bug的，参见：StrInsert函数注释，LinklistOrderLocalElem
+	定义注释，PolynAdd函数注释。DataStructureC对其稍作了修改。
+	5）算法无法实现具体应用的：关键词索引表。DataStructureC增加了调用者接口，使算法能
+	够被调用者具体应用。
+
+	5.为了增强代码健壮性和可移植性作的修改和补充（参考后续的注释部分）。
+	//////////////////////////////////////////////////////////////////////////////
+
+	另外，DataStructureC对实现的某些算法作了作了一些讨论，如离散事件模拟的作业调度
+	算法，KMP算法的效率等，可参见相关算法的注释。
+	//////////////////////////////////////////////////////////////////////////////
+	文件结构
+	DataStructureC.h	//公用头文件,包含文件、公用数据结构定义、公用函数声明
+	DataStructureC.c	//公用函数的实现
+	List.h				//线性顺序表、线性链表、一元多项式的数据结构定义和函数声明
+	list.c				//线性顺序表、线性链表、一元多项式的实现
+	Stack.h				//顺序栈、进制转换、括号匹配、行编辑、迷宫求解、表达式求值
+	//的数据结构定义和函数声明
+	Stack.c				//顺序栈、进制转换、括号匹配、行编辑、迷宫求解、表达式求值
+	//的实现
+	Queue.h				//顺序队列、离散事件模拟的数据结构定义和函数声明
+	Queue.c				//顺序队列、离散事件模拟的实现
+	HString.h			//堆分配结构串、词索引表的数据结构定义和函数声明
+	HString.c			//对分配结构串、词索引表的实现
+	*****************************************************************************/
 
 	//一些基本的类型
 
@@ -23,7 +82,8 @@ extern "C"
 #define	ERROR	0
 #define	INFEASIBLE	-1
 #define	OVERFLOW	-2
-#define	BUFFER_TOO_SMALL	-3
+#define	UNDERFLOW	-3
+#define	BUFFER_TOO_SMALL	-4
 
 	typedef	int	Status;
 
@@ -46,8 +106,8 @@ extern "C"
 
 	//通用链式节点
 	/*教材对节点元素的类型定义为ElemType,针对不同的应用类型,ElemType会有差别
-	例如线性链表中多项式运算ElemType为
 
+	例如线性链表中多项式运算ElemType为:
 	typedef	struct _POLYN_ELEMENT_DATA
 	{
 		float coef;		//系数
@@ -55,7 +115,6 @@ extern "C"
 	}POLYN_ELEMENT_DATA, *PPOLYN_ELEMENT_DATA;
 
 	栈中进制转换ElemType为int,行编辑ElemType为char,迷宫求解中ElementType为
-
 	typedef	struct _MAZEELEMENT
 	{
 		int ord;			//通道块在路径上的序号
@@ -63,8 +122,7 @@ extern "C"
 		int di;				//从此通道块走向下一通道块的方向
 	}MAZEELEMENT;
 
-	队列离散事件模拟中客户端队列的ElementType为
-
+	队列离散事件模拟中客户端队列的ElementType为:
 	typedef	struct _BM_CUSTOM
 	{
 		int ArrivalTime;	//到达时间
@@ -101,8 +159,8 @@ extern "C"
 
 	//2.PALLOCATEROUTINE/PFREEROUTINE内存分配和释放函数:当调用者于不同的编程
 	//环境中调用数据结构时,可能会根据实际情况自定义内存的分配和释放操作(如
-	//C++中可使用new/delete分配、释放内存；WIN 32环境下可使用HeapAlloc/HeapFree
-	//分配、释放内存；WDK环境下用ExAllocatePoolWithTag/ExFreePoolWithTag分配、
+	//C++中可使用new/delete分配释放内存；WIN 32环境下可使用HeapAlloc/HeapFree
+	//分配/释放内存；WDK环境下用ExAllocatePoolWithTag/ExFreePoolWithTag分配/
 	//释放内存)调用者根据自己实际使用情况在初始化数据结构时传入内存分配、释放
 	//的回调函数,当需要时,结构会按照调用者提供的方法进行操作
 

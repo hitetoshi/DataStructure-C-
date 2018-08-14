@@ -13,7 +13,7 @@ extern "C"
 	//线性顺序表
 	typedef	struct _SQLIST
 	{
-		ELEMENT *elem;					//存储空间基址
+		ELEMENT *elem;						//存储空间基址
 		size_t length;						//当前长度
 		size_t listsize;					//当前分配的存储容量
 		PCOMPAREROUTINE compareroutine;		//比较函数
