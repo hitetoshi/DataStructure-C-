@@ -54,6 +54,7 @@ void print_usage()
 		"2:栈(进制转换,括号匹配,行编辑,迷宫求解,表达式计算)\n"\
 		"3:队列(离散事件模拟)\n"\
 		"4:串(模式匹配,词索引表)\n"\
+		"5:数组(稀疏矩阵(行逻辑链接,十字链表),普通矩阵)\n"
 		"\n0:退出程序\n");
 }
 
@@ -75,6 +76,12 @@ void print_hstring()
 	printf("1:模式匹配\n2:关键词索引表\n");
 }
 
+void print_array()
+{
+	printf("选择要演示的数组结构:\n");
+	printf("1:稀疏矩阵(行逻辑链接，十字链表)\n2:普通矩阵\n");
+}
+
 int main(int argc, char *argv[])
 {
 	int cmd = 0;
@@ -85,11 +92,20 @@ int main(int argc, char *argv[])
 	if (argc >= 2)
 	{
 		cmd = atoi(argv[1]);
+		if (cmd < 0 || cmd>5)
+		{
+			print_usage();
+			while (scanf_s("%d", &cmd) != 1 && cmd<0 || cmd>5)
+			{
+				printf("输入错误,请重新输入:");
+				while ((c = getchar()) != EOF && c != '\n');
+			}
+		}
 	}
 	else
 	{
 		print_usage();
-		while (scanf_s("%d", &cmd) != 1 && cmd<0 || cmd>4)
+		while (scanf_s("%d", &cmd) != 1 && cmd<0 || cmd>5)
 		{
 			printf("输入错误,请重新输入:");
 			while ((c = getchar()) != EOF && c != '\n');
@@ -148,6 +164,19 @@ int main(int argc, char *argv[])
 				}
 			}
 			ShowHString(cat);
+			break;
+		case 5:
+			if (!cat)
+			{
+				printf("\n");
+				print_array();
+				while (scanf_s("%d", &cat) != 1 && cat < 1 || cat>2)
+				{
+					printf("输入错误,请重新输入:");
+					while ((c = getchar()) != EOF && c != '\n');
+				}
+			}
+			ShowArray(cat);
 			break;
 		default:
 			break;

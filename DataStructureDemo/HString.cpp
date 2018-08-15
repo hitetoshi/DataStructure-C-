@@ -3,7 +3,7 @@
 
 char string_table[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789~!@#$%^&*()_+`-=|\\<>?,./";
 
-size_t RandomString(HString *table, int len, HString *s)
+size_t RandomString(HSTRING *table, int len, HSTRING *s)
 {
 	size_t table_len;
 
@@ -17,7 +17,7 @@ size_t RandomString(HString *table, int len, HString *s)
 	return StrLength(s);
 }
 
-void ShowStringIndex(HString *t1,HString *t2)
+void ShowStringIndex(HSTRING *t1, HSTRING *t2)
 {
 	LARGE_INTEGER end_time;
 	LARGE_INTEGER begin_time;
@@ -48,7 +48,7 @@ void ShowStringIndex(HString *t1,HString *t2)
 
 void ShowIndex()
 {
-	HString t1, t2, table;
+	HSTRING t1, t2, table;
 	int str_len;
 	size_t pos;
 	size_t substr_len;
@@ -67,7 +67,7 @@ void ShowIndex()
 	printf("随机生成长度 %d 串:\n%s\n", str_len, StrPointer(&t1));
 
 	substr_len = RangeRandom(30, 50);	//随机生成30-50串长子串
-	pos = RangeRandom(0, str_len - substr_len);
+	pos = RangeRandom(0, (int)(str_len - substr_len));
 	StrSubString(&t2, &t1, pos, substr_len);
 	printf("\n随机截取长度 %zd 位置 %zd 模式串:\n%s\n", substr_len, pos, StrPointer(&t2));
 

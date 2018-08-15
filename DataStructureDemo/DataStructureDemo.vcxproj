@@ -166,6 +166,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Array.cpp" />
     <ClCompile Include="DataStructureDemo.cpp" />
     <ClCompile Include="HString.cpp" />
     <ClCompile Include="Linklist.cpp" />

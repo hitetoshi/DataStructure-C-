@@ -122,6 +122,32 @@ Status SqlistGetElem(SQLIST *list, size_t pos, ELEMENT *elem)
 	}
 }
 
+Status SqlistSetElem(SQLIST *list, size_t pos, ELEMENT *elem)
+{
+	if (pos >= 0 && pos < list->length)
+	{
+		if (list->elem[pos].size < elem->size)
+		{
+			list->freeroutine(list->elem[pos].data);
+			list->elem[pos].data = list->allocateroutine(elem->size);
+		}
+		if (list->elem[pos].data)
+		{
+			CMEM_COPY(list->elem[pos].data, elem->data, elem->size);
+			list->elem[pos].size = elem->size;
+			return OK;
+		}
+		else
+		{
+			return OVERFLOW;
+		}
+	}
+	else
+	{
+		return INFEASIBLE;
+	}
+}
+
 size_t SqlistLocate(SQLIST *list, ELEMENT *elem)
 {
 	size_t pos;
@@ -181,15 +207,15 @@ Status SqlistPriorElem(SQLIST *list, ELEMENT *elem, ELEMENT *pre_elem)
 	}
 }
 
-Status SqlistNextElem(SQLIST *list, ELEMENT *elem, ELEMENT *pre_elem)
+Status SqlistNextElem(SQLIST *list, ELEMENT *elem, ELEMENT *next_elem)
 {
 	//O(list->length)
 	size_t pos = SqlistLocate(list, elem);
 
 	if (pos >= 0 && pos < list->length - 1)
 	{
-		pre_elem->data = list->elem[pos + 1].data;
-		pre_elem->size = list->elem[pos + 1].size;
+		next_elem->data = list->elem[pos + 1].data;
+		next_elem->size = list->elem[pos + 1].size;
 		return OK;
 	}
 	else
@@ -495,6 +521,9 @@ Status LinklistDel(LINKLIST *list, PLINKNODE p, PLINKNODE *q)
 
 Status LinklistSetCurElem(PLINKNODE *p, ELEMENT *elem)
 {
+	//这里本应为elem.data重新分配内存
+	//但教材给的本函数的定义没有SQLIST结构,找不到内存分配函数
+	//因此只能使用原来已分配的内存
 	if ((*p)->elem.size >= elem->size)
 	{
 		memcpy((*p)->elem.data, elem->data, elem->size);

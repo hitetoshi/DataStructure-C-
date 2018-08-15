@@ -5,6 +5,7 @@
 #include "Stack.h"
 #include "Queue.h"
 #include "HString.h"
+#include "Array.h"
 
 #define	STRUCTURE_SIZE_MIN	10
 #define	STRUCTURE_SIZE_MAX	30
@@ -23,4 +24,4 @@ void ShowList(int cat);
 void ShowStack(int cat);
 void ShowQueue();
 void ShowHString(int cat);
-
+void ShowArray(int cat);
