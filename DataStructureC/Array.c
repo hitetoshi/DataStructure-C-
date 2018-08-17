@@ -245,9 +245,19 @@ Status ArrayAssign2(ARRAY *A, ELEMENT *e, size_t dim, size_t *index)
 }
 
 //普通矩阵
-
-Status MatrixCreate(MATRIX *M, size_t m, size_t n)
+Status MatrixCreate(MATRIX *M)
 {
+	M->r = -1;
+	M->c = -1;
+	return OK;
+}
+
+Status MatrixReset(MATRIX *M, size_t m, size_t n)
+{
+	if (M->r != -1 || M->c != -1)
+	{
+		ArrayDestroy(&M->data);
+	}
 	if (ArrayInit(&M->data, 2, m, n) == OK)
 	{
 		M->r = m;
@@ -293,7 +303,7 @@ Status MatrixTranspose(MATRIX *M, MATRIX *T)
 	float v;
 
 	//时间复杂度O(M->r*M->c)
-	if (T->r != M->c || T->c != M->r)
+	if (MatrixReset(T, M->c, M->r) != OK)
 	{
 		return ERROR;
 	}
@@ -309,6 +319,41 @@ Status MatrixTranspose(MATRIX *M, MATRIX *T)
 	return OK;
 }
 
+Status MatrixMult(MATRIX *M, MATRIX *N, MATRIX *Q)
+{
+	size_t i, j, k;
+	ELEMENT e1, e2;
+	float v;
+	ELEMENT e;
+
+	if (M->c != N->r)
+	{
+		return ERROR;
+	}
+	e.data = &v;
+	e.size = sizeof(v);
+	if (MatrixReset(Q, M->r, N->c) != OK)
+	{
+		return ERROR;
+	}
+	for (i = 0; i < M->r; i++)
+	{
+		for (j = 0; j < N->c; j++)
+		{
+			v = 0;
+			for (k = 0; k < M->c; k++)
+			{
+				if (ArrayValue(&M->data, &e1, i, k) == OK && ArrayValue(&N->data, &e2, k, j)==OK)
+				{
+					v += (*((float *)e1.data))*(*((float *)e2.data));
+				}
+			}
+			ArrayAssign(&Q->data, &e, i, j);
+		}
+	}
+	return OK;
+}
+
 //稀疏矩阵
 int __cdecl SMatrixCompare(ELEMENT *first, ELEMENT *second)
 {
@@ -317,12 +362,8 @@ int __cdecl SMatrixCompare(ELEMENT *first, ELEMENT *second)
 		((TRIPLE *)(second->data))->i, ((TRIPLE *)(second->data))->j);
 }
 
-Status RLSMatrixCreate(RLSMATRIX *M, size_t m, size_t n)
+Status RLSMatrixCreate(RLSMATRIX *M)
 {
-	size_t pos;
-	ELEMENT e;
-	size_t v;
-
 	if (SqlistInit(&M->data, SMatrixCompare, CommonAllocRotuine, CommonFreeRoutine) != OK)
 	{
 		return ERROR;
@@ -331,6 +372,18 @@ Status RLSMatrixCreate(RLSMATRIX *M, size_t m, size_t n)
 	{
 		return ERROR;
 	}
+	M->mu = -1;
+	M->nu = -1;
+	return OK;
+}
+
+Status RLSMatrixReset(RLSMATRIX *M, size_t m, size_t n)
+{
+	size_t pos;
+	ELEMENT e;
+	size_t v;
+
+	RLSMatrixClear(M);
 	//初始化rpos表
 	e.data = &v;
 	e.size = sizeof(v);
@@ -339,8 +392,8 @@ Status RLSMatrixCreate(RLSMATRIX *M, size_t m, size_t n)
 	{
 		if (SqlistOrderInsert(&M->rpos, &e) != OK)
 		{
-			SqlistDestroy(&M->data);
-			SqlistDestroy(&M->rpos);
+			SqlistClear(&M->data);
+			SqlistClear(&M->rpos);
 			return ERROR;
 		}
 	}
@@ -354,7 +407,7 @@ void RLSMatrixDestroy(RLSMATRIX *M)
 {
 	SqlistDestroy(&M->data);
 	SqlistDestroy(&M->rpos);
-	M->mu = M->nu = 0;
+	M->mu = M->nu = -1;
 }
 
 //当从稀疏矩阵M位置pos摘除下标(i,j)的非零元后调用此函数更新rpos表
@@ -442,8 +495,6 @@ Status RLSMatrixAssign(RLSMATRIX *M, size_t i, size_t j, float value)
 	//此操作采用M->data整表扫描的算法,也可以使用M->rops辅助定位,将M->data表的扫描范围缩小到
 	//至多一行的范围。但考虑此处定位失败还需要得到元素插入位置,因此仍使用整表扫描较为方便
 	//后面的RLSMatrixValue演示了调用RLSMatrixLocatec从而rops辅助扫描的算法
-	//此处查找的时间复杂度为O(M->mu*M->nu),若采用折半查找法时间复杂度为O(log(M->mu*M->nu))
-	//以rops辅助查找的时间复杂度为O(M->nu),采用折半查找法时间复杂度为O(log(m->nu))
 	if ((i >= 0 && i < M->mu) && (j>=0 && j<M->nu))
 	{
 		trip.i = i;
@@ -586,12 +637,10 @@ Status RLSMatrixTranspose(RLSMATRIX *M, RLSMATRIX *T)
 	size_t col, p;
 	ELEMENT e;
 
-	if (T->mu != M->nu || T->nu != M->mu)
+	if (RLSMatrixReset(T, M->nu, M->mu) != OK)
 	{
 		return ERROR;
 	}
-	//清除T中原来的数据
-	RLSMatrixClear(T);
 	if (SqlistLength(&M->data))
 	{
 		for (col = 0; col < M->nu; col++)
@@ -610,17 +659,179 @@ Status RLSMatrixTranspose(RLSMATRIX *M, RLSMATRIX *T)
 
 Status RLSMatrixFastTranspose(RLSMATRIX *M, RLSMATRIX *T)
 {
-	if (T->mu != M->nu || T->nu != M->mu)
+	size_t *num;
+	size_t *cpot;
+	size_t t, col, p, q;
+	ELEMENT e;
+
+	if (RLSMatrixReset(T, M->nu, M->mu) != OK)
 	{
 		return ERROR;
 	}
-	//清除T中原来的数据
-	RLSMatrixClear(T);
 	if (SqlistLength(&M->data))
 	{
-
+		num = CMEM_ALOC(sizeof(size_t)*M->nu);
+		if (!num)
+		{
+			return ERROR;
+		}
+		CMEM_SET(num, 0, sizeof(size_t)*M->nu);
+		for (t = 0; t < SqlistLength(&M->data); t++)
+		{
+			if (SqlistGetElem(&M->data, t, &e) == OK)
+			{
+				num[((TRIPLE *)e.data)->j]++;		//求M中每一列含非零元个数
+			}
+		}
+		cpot = CMEM_ALOC(sizeof(size_t)*SqlistLength(&M->data));
+		if (!cpot)
+		{
+			CMEM_FREE(num);
+			return ERROR;
+		}
+		//求第col列中第一个非零元在b.data中的序号
+		cpot[0] = 0;
+		for (col = 1; col < SqlistLength(&M->data); col++)
+		{
+			cpot[col] = cpot[col - 1] + num[col-1];
+		}
+		for (p = 0; p < SqlistLength(&M->data); p++)
+		{
+			if (SqlistGetElem(&M->data, p, &e) == OK)
+			{
+				col = ((TRIPLE *)e.data)->j;
+				q = cpot[col];
+				RLSMatrixAssign(T, ((TRIPLE *)e.data)->j, ((TRIPLE *)e.data)->i, ((TRIPLE *)e.data)->value);
+				cpot[col]++;
+			}
+		}
+		CMEM_FREE(num);
+		CMEM_FREE(cpot);
 	}
 
+	return OK;
+}
+
+Status RLSMatrixFastTranspose2(RLSMATRIX *M, RLSMATRIX *T)
+{
+	size_t p;
+	ELEMENT e;
+
+	if (RLSMatrixReset(T, M->nu, M->mu) != OK)
+	{
+		return ERROR;
+	}
+
+	//因为RLSMATRIX的data已经实现了排序,且RLSMatrixValue在赋值时会自动更新rpos表
+	//所以直接用M->data表交换行列标存入M即可
+	for (p = 0; p < SqlistLength(&M->data); p++)
+	{
+		if (SqlistGetElem(&M->data, p, &e))
+		{
+			RLSMatrixAssign(T, ((TRIPLE *)e.data)->j, ((TRIPLE *)e.data)->i, ((TRIPLE *)e.data)->value);
+		}
+	}
+	return OK;
+}
+
+Status RLSMatrixMult(RLSMATRIX *M, RLSMATRIX *N, RLSMATRIX *Q)
+{
+	size_t arow;
+	ELEMENT e1, e2, e3, e4;
+	size_t p, q, n;
+	size_t brow;
+	size_t t;
+	size_t ccol;
+	float *ctemp;
+
+	if (M->nu != N->mu)
+	{
+		return ERROR;
+	}
+	if (RLSMatrixReset(Q, M->mu, N->nu) != OK)
+	{
+		return ERROR;
+	}
+	if (SqlistLength(&M->data) == 0 && SqlistLength(&N->data) == 0)
+	{
+		return OK;
+	}
+	ctemp = CMEM_ALOC(sizeof(float)*N->nu);
+	if (!ctemp)
+	{
+		return ERROR;
+	}
+	for (arow = 0; arow < M->mu; arow++)	//处理M的每一行
+	{
+		//当前行各元素累加器清零
+		CMEM_SET(ctemp, 0, sizeof(float)*N->nu);
+		if (SqlistGetElem(&M->rpos, arow, &e1) == OK && *((size_t *)e1.data) != -1)
+		{
+			p = *((size_t *)e1.data);
+			n = M->nu;
+			//p为data表中当前行首个非零元位置,n为data表中当前行最后一个非零元位置+1(则当前行非零元数目为n-p)
+			//n的求法是:如果rops中当前行的下一行有存储非零值,那么这个位置就是n
+			//如果当前行的下一行没有存储非零值位置(*((size_t *)e1.data) == -1),则继续使用rops表
+			//扫描下一行,直到遇到有非零元存储位置,这个位置就是n
+			//如果rops表已经扫描到结束仍然没有其它非零元位置存储,那么data表中剩下的项全是当前行的非零元
+			//此时n=Length(data)-p
+
+			//教材中描述rpos[row+1]-1为row行最后一个非零元的位置,对于教材中的例子矩阵,每行都存在非零元
+			//但是考虑当第row+1行没有非零元时,rops[row+1]的值应当等于row行首个非零元位置,此时rops[row+1]
+			//有值,又应该认为第row+1行存在非零元,其存储位置rops[row+1]等于row行首个非零元位置,即:
+			//如果第row+1行没有非零元,根据教材描述,会得出第row+1行有非零元,并且把对第row+1行非零元的所有访问
+			//映射到第row行
+			//此描述问题很严重本例不采用,本例中rops[row]==-1表示第row行不存在非零元
+			if (SqlistGetElem(&M->rpos, arow + 1, &e1) == OK && *((size_t *)e1.data) != -1)
+			{
+				n = *((size_t *)e1.data);
+			}
+			else
+			{
+				for (t = p; t <SqlistLength(&M->rpos) - p; t++)
+				{
+					if (SqlistGetElem(&M->data, t, &e2) == OK && ((TRIPLE *)e2.data)->i != arow)
+					{
+						n = t;
+						break;
+					}
+				}
+			}
+
+			for (p; p < n; p++)	//对当前行中每一个非零元
+			{
+				if (SqlistGetElem(&M->data, p, &e2) == OK)
+				{
+					brow = ((TRIPLE *)e2.data)->j;	//找到对应元在N中的行号
+					if (SqlistGetElem(&N->rpos, brow, &e3) == OK && *((size_t *)e3.data) != -1)	//N中对应行中存在非零元
+					{
+						q = *((size_t *)e3.data);
+						t = N->nu;
+						if (SqlistGetElem(&N->rpos, brow + 1, &e3) == OK && *((size_t *)e3.data) != -1)
+						{
+							t = *((size_t *)e3.data);
+						}
+						for (q; q < t; q++)
+						{
+							if (SqlistGetElem(&N->data, q, &e4) == OK)
+							{
+								ccol = ((TRIPLE *)e4.data)->j;	//乘积元素在Q中的列号
+								ctemp[ccol] += ((TRIPLE *)e2.data)->value * ((TRIPLE *)e4.data)->value;
+							}
+						}
+					}
+				}
+			}
+		}
+		for (ccol = 0; ccol < Q->nu; ccol++)	//压缩存储该行非零元
+		{
+			if (ctemp[ccol])
+			{
+				RLSMatrixAssign(Q, arow, ccol, ctemp[ccol]);
+			}
+		}
+	}
+	CMEM_FREE(ctemp);
 	return OK;
 }
 
@@ -640,7 +851,7 @@ Status RLSMatrixDump(MATRIX *T, RLSMATRIX *M)
 	size_t last_c;
 	ELEMENT e,ev;
 
-	if (T->r != M->mu || T->c != M->nu)
+	if (MatrixReset(T, M->mu, M->nu) != OK)
 	{
 		return ERROR;
 	}
@@ -678,5 +889,7 @@ Status __cdecl reset_rpos(ELEMENT *e)
 void RLSMatrixClear(RLSMATRIX *M)
 {
 	SqlistClear(&M->data);
-	SqlistTraverse(&M->rpos, reset_rpos);
+	SqlistClear(&M->rpos);
+	M->mu = -1;
+	M->nu = -1;
 }

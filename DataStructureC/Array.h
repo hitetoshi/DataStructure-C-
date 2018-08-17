@@ -52,18 +52,26 @@ extern "C"
 		size_t c;	//矩阵列数
 	}MATRIX,*PMATRIX;
 
-	//创建m行n列的矩阵
-	Status MatrixCreate(MATRIX *M, size_t m,size_t n);
-#define	MatrixDestroy(M)	ArrayDestroy(&((MATRIX *)M)->data)
+	//创建矩阵
+	Status MatrixCreate(MATRIX *M);
+	//矩阵M已存在,将M重置为m行n列,若M中已有数据则全部清除
+	Status MatrixReset(MATRIX *M, size_t m, size_t n);
+	//矩阵M已存在,将M销毁
+#define	MatrixDestroy(M)	\
+	if(((MATRIX *)M)->r!=-1 && ((MATRIX *)M)->c!=-1)	\
+	{	\
+		ArrayDestroy(&((MATRIX *)M)->data);	\
+	}
 #define	MatrixRows(M)		((MATRIX *)M)->r
 #define	MatrixCols(M)		((MATRIX *)M)->c
 	//若下标(i,j)合法,将value赋值给矩阵M中下标(i,j)的元
 	Status MatrixAssign(MATRIX *M, size_t i, size_t j, float value);
 	//若下标(i,j)合法,将矩阵M中下标(i,j)元的值赋给value
 	Status MatrixValue(MATRIX *M, size_t i, size_t j, float *value);
-	//矩阵M,T已初始化,矩阵T的列数等于M的行数,T的行数等于M的列数
-	//将M的转置矩阵存入T
+	//矩阵M,T已初始化,将M的转置矩阵存入T
 	Status MatrixTranspose(MATRIX *M, MATRIX *T);
+	//矩阵M,N,Q已初始化,若M可左乘N,将M左乘N的结果存入Q,否则返回ERROR
+	Status MatrixMult(MATRIX *M, MATRIX *N, MATRIX *Q);
 
 	//压缩存储的稀疏矩阵(行逻辑链接顺序表)
 	typedef	struct _TRIPLE
@@ -89,7 +97,9 @@ extern "C"
 #define	MatrixIndexCompare(i1,j1,i2,j2)	i1 < i2 ? -1 : (i1 == i2 ? (int)(j1 - j2) : 1)
 
 	//创建m*n稀疏矩阵M
-	Status RLSMatrixCreate(RLSMATRIX *M, size_t m, size_t n);
+	Status RLSMatrixCreate(RLSMATRIX *M);
+	//稀疏矩阵M已存在,将M重置为m行n列,若M中已有数据,则全部清除
+	Status RLSMatrixReset(RLSMATRIX *M, size_t m, size_t n);
 	//销毁稀疏矩阵M
 	void RLSMatrixDestroy(RLSMATRIX *M);
 #define	RLSMatrixRows(M)		((RLSMATRIX *)M)->mu
@@ -105,16 +115,28 @@ extern "C"
 	Status RLSMatrixLocate(RLSMATRIX *M, size_t i, size_t j, size_t *pos);
 	//教材定义了一个打印稀疏矩阵的操作,但是在Windows下如果不使用Windows API很难打印
 	//出漂亮的矩阵,因此本例不实现稀疏矩阵的打印操作,由使用者自行打印
+	//void RLSMatrixPrint(RLSMATRIX *M);
 	//T已经创建,由稀疏矩阵M复制得到T
 	Status RLSMatrixCopy(RLSMATRIX *T, RLSMATRIX *M);
-	//算法5.1稀疏矩阵M,T已建立,T的行数等于M的列数,T的列数等于M的行数
-	//将M的转置矩阵存入T
+	//算法5.1稀疏矩阵M,T已创建,将M的转置矩阵存入T
 	Status RLSMatrixTranspose(RLSMATRIX *M, RLSMATRIX *T);
-	//算法5.2稀疏矩阵M,T已建立,T的行数等于M的列数,T的列数等于M的行数
-	//将M的转置矩阵存入T
+	//算法5.2稀疏矩阵M,T已创建,将M的转置矩阵存入T
+	//本算法有很多操作和变量没有实际意义,因为此例定义的稀疏矩阵结构与教材不一样
+	//矩阵M->data已经实现了排序的操作,向T存入数据时也会自动排序(参见RLSMatrixAssign
+	//代码。将RLSMatrixFastTranspose操作放在这里仅为演示教材算法,下面的RLSMatrixFastTranspose2
+	//以适应本例定义的稀疏结构的算法实现快速转置
+	//T由调用者销毁
 	Status RLSMatrixFastTranspose(RLSMATRIX *M, RLSMATRIX *T);
+	//适应本例稀疏矩阵结构的快速转置算法
+	//因为RLSMATRIX的data已经实现了排序,且RLSMatrixValue在赋值时会自动更新rpos表
+	//所以直接用M->data表交换行列标存入M即可
+	//T由调用者销毁
+	Status RLSMatrixFastTranspose2(RLSMATRIX *M, RLSMATRIX *T);
+	//算法5.3稀疏矩阵相乘
+	//稀疏矩阵M,N,Q已初始化,若M可左乘N,将M左乘N的结果存入Q,否则返回ERROR
+	Status RLSMatrixMult(RLSMATRIX *M, RLSMATRIX *N, RLSMATRIX *Q);
 
-	//矩阵T已经初始化,行数和列数与稀疏矩阵M相同,将稀疏矩阵M转储到矩阵T
+	//将稀疏矩阵M转储到矩阵T
 	Status RLSMatrixDump(MATRIX *T, RLSMATRIX *M);
 	//稀疏矩阵M已初始化,清除M中存储的信息
 	void RLSMatrixClear(RLSMATRIX *M);
