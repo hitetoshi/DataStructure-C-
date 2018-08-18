@@ -1,10 +1,10 @@
 ﻿#include "stdafx.h"
 #include "DataStructureDemo.h"
 
-#define	MIN_MATRIX_ROW	10
-#define	MAX_MATRIX_ROW	20
-#define	MIN_MATRIX_COL	10
-#define	MAX_MATRIX_COL	20
+#define	MIN_MATRIX_ROW	5
+#define	MAX_MATRIX_ROW	10
+#define	MIN_MATRIX_COL	5
+#define	MAX_MATRIX_COL	10
 
 #define	MAX_MATRIX_VALUE	100
 
@@ -29,8 +29,14 @@ void PrintMatrix(MATRIX *M)
 			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Info.dwCursorPosition);
 
 			v = 0;
-			MatrixValue(M, i, j, &v);
-			printf("%d", (int)v);
+			if (MatrixValue(M, i, j, &v) == OK)
+			{
+				printf("%d", (int)v);
+			}
+			else
+			{
+				printf("NULL");
+			}
 		}
 		GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &Info);
 		Info.dwCursorPosition.X = (short)j * 4+1;
@@ -111,10 +117,9 @@ void ShowMatrixMulti()
 
 	system("cls");
 	printf_color(FOREGROUND_GREEN, "矩阵乘法:\n\n");
-	//生成两个较小的矩阵
-	m = RangeRandom(MIN_MATRIX_ROW/2, MAX_MATRIX_ROW/2);
-	n = RangeRandom(MIN_MATRIX_COL/2, MAX_MATRIX_COL/2);
-	n2 = RangeRandom(MIN_MATRIX_COL / 2, MAX_MATRIX_COL / 2);
+	m = RangeRandom(MIN_MATRIX_ROW, MAX_MATRIX_ROW);
+	n = RangeRandom(MIN_MATRIX_COL, MAX_MATRIX_COL);
+	n2 = RangeRandom(MIN_MATRIX_COL, MAX_MATRIX_COL);
 	if (MatrixCreate(&M) != OK)
 	{
 		return;
@@ -167,6 +172,76 @@ void ShowMatrixMulti()
 	if (MatrixMult(&M, &N, &Q) == OK)
 	{
 		printf("M×N=\n");
+		PrintMatrix(&Q);
+	}
+	MatrixDestroy(&M);
+	MatrixDestroy(&N);
+	MatrixDestroy(&Q);
+}
+
+void ShowMatrixAdd()
+{
+	MATRIX M, N, Q;
+	size_t m, n;
+	float v;
+
+	system("cls");
+	printf_color(FOREGROUND_GREEN, "矩阵加法:\n\n");
+	//生成两个较小的矩阵
+	m = RangeRandom(MIN_MATRIX_ROW, MAX_MATRIX_ROW);
+	n = RangeRandom(MIN_MATRIX_COL, MAX_MATRIX_COL);
+	if (MatrixCreate(&M) != OK)
+	{
+		return;
+	}
+	if (MatrixCreate(&N) != OK)
+	{
+		MatrixDestroy(&M);
+		return;
+	}
+	if (MatrixCreate(&Q) != OK)
+	{
+		MatrixDestroy(&M);
+		MatrixDestroy(&N);
+		return;
+	}
+	if (MatrixReset(&M, m, n) != OK)
+	{
+		MatrixDestroy(&M);
+		MatrixDestroy(&N);
+		MatrixDestroy(&Q);
+		return;
+	}
+	if (MatrixReset(&N, m, n) != OK)
+	{
+		MatrixDestroy(&M);
+		MatrixDestroy(&N);
+		MatrixDestroy(&Q);
+		return;
+	}
+	for (size_t i = 0; i < m; i++)
+	{
+		for (size_t j = 0; j < n; j++)
+		{
+			v = (float)RangeRandom(0, MAX_MATRIX_VALUE / 2) - MAX_MATRIX_VALUE / 2 / 2;
+			MatrixAssign(&M, i, j, v);
+		}
+	}
+	for (size_t i = 0; i < m; i++)
+	{
+		for (size_t j = 0; j < n; j++)
+		{
+			v = (float)RangeRandom(0, MAX_MATRIX_VALUE / 2) - MAX_MATRIX_VALUE / 2 / 2;
+			MatrixAssign(&N, i, j, v);
+		}
+	}
+	printf("随机生成%zd×%zd矩阵M:\n", m, n);
+	PrintMatrix(&M);
+	printf("随机生成%zd×%zd矩阵N:\n", m, n);
+	PrintMatrix(&N);
+	if (MatrixAdd(&M, &N, &Q) == OK)
+	{
+		printf("M＋N=\n");
 		PrintMatrix(&Q);
 	}
 	MatrixDestroy(&M);
@@ -227,9 +302,9 @@ void ShowRLSMatrixMulti()
 	printf_color(FOREGROUND_GREEN, "稀疏矩阵乘法:\n\n");
 
 	//生成两个较小的矩阵
-	m = 2;//RangeRandom(MIN_MATRIX_ROW / 2, MAX_MATRIX_ROW / 2);
-	n = 1;// RangeRandom(MIN_MATRIX_COL / 2, MAX_MATRIX_COL / 2);
-	n2 = 2;// RangeRandom(MIN_MATRIX_COL / 2, MAX_MATRIX_COL / 2);
+	m = RangeRandom(MIN_MATRIX_ROW, MAX_MATRIX_ROW);
+	n = RangeRandom(MIN_MATRIX_COL, MAX_MATRIX_COL);
+	n2 = RangeRandom(MIN_MATRIX_COL, MAX_MATRIX_COL);
 	if (RLSMatrixCreate(&M) != OK)
 	{
 		return;
@@ -260,24 +335,7 @@ void ShowRLSMatrixMulti()
 		return;
 	}
 
-	for (size_t i = 0; i < m; i++)
-	{
-		for (size_t j = 0; j < n; j++)
-		{
-			v = (float)RangeRandom(0, MAX_MATRIX_VALUE / 10) - MAX_MATRIX_VALUE / 10 / 2;
-			RLSMatrixAssign(&M, i, j, v);
-		}
-	}
-	for (size_t i = 0; i < n; i++)
-	{
-		for (size_t j = 0; j < n2; j++)
-		{
-			v = (float)RangeRandom(0, MAX_MATRIX_VALUE / 10) - MAX_MATRIX_VALUE / 10 / 2;
-			RLSMatrixAssign(&N, i, j, v);
-		}
-	}
-
-	/*num = m*n / 5;
+	num = m*n / 5;
 	for (size_t p = 0; p < num; p++)
 	{
 		i = RangeRandom(0, (int)m);
@@ -292,7 +350,7 @@ void ShowRLSMatrixMulti()
 		j = RangeRandom(0, (int)n2);
 		v = (float)RangeRandom(0, MAX_MATRIX_VALUE/10) - MAX_MATRIX_VALUE/10 / 2;
 		RLSMatrixAssign(&N, i, j, v);
-	}*/
+	}
 	printf("随机生成%zd×%zd稀疏矩阵M:\n", m, n);
 	PrintRLSMatrix(&M);
 	printf("随机生成%zd×%zd稀疏矩阵N:\n", n, n2);
@@ -302,6 +360,81 @@ void ShowRLSMatrixMulti()
 		printf("M×N=\n");
 		PrintRLSMatrix(&Q);
 	}
+
+	RLSMatrixDestroy(&M);
+	RLSMatrixDestroy(&N);
+	RLSMatrixDestroy(&Q);
+}
+
+void ShowRLSMatrixAdd()
+{
+	RLSMATRIX M, N, Q;
+	size_t m, n;
+	float v;
+	size_t num;
+	size_t i, j;
+
+	system("cls");
+	printf_color(FOREGROUND_GREEN, "稀疏矩阵加法:\n\n");
+
+	//生成两个较小的矩阵
+	m = RangeRandom(MIN_MATRIX_ROW, MAX_MATRIX_ROW);
+	n = RangeRandom(MIN_MATRIX_COL, MAX_MATRIX_COL);
+	if (RLSMatrixCreate(&M) != OK)
+	{
+		return;
+	}
+	if (RLSMatrixCreate(&N) != OK)
+	{
+		RLSMatrixDestroy(&M);
+		return;
+	}
+	if (RLSMatrixCreate(&Q) != OK)
+	{
+		RLSMatrixDestroy(&M);
+		RLSMatrixDestroy(&N);
+		return;
+	}
+	if (RLSMatrixReset(&M, m, n) != OK)
+	{
+		RLSMatrixDestroy(&M);
+		RLSMatrixDestroy(&N);
+		RLSMatrixDestroy(&Q);
+		return;
+	}
+	if (RLSMatrixReset(&N, m, n) != OK)
+	{
+		RLSMatrixDestroy(&M);
+		RLSMatrixDestroy(&N);
+		RLSMatrixDestroy(&Q);
+		return;
+	}
+
+	num = m*n / 5;
+	for (size_t p = 0; p < num; p++)
+	{
+		i = RangeRandom(0, (int)m);
+		j = RangeRandom(0, (int)n);
+		v = (float)RangeRandom(0, MAX_MATRIX_VALUE / 10) - MAX_MATRIX_VALUE / 10 / 2;
+		RLSMatrixAssign(&M, i, j, v);
+	}
+	for (size_t p = 0; p < num; p++)
+	{
+		i = RangeRandom(0, (int)m);
+		j = RangeRandom(0, (int)m);
+		v = (float)RangeRandom(0, MAX_MATRIX_VALUE / 10) - MAX_MATRIX_VALUE / 10 / 2;
+		RLSMatrixAssign(&N, i, j, v);
+	}
+	printf("随机生成%zd×%zd稀疏矩阵M:\n", m, n);
+	PrintRLSMatrix(&M);
+	printf("随机生成%zd×%zd稀疏矩阵N:\n", m, n);
+	PrintRLSMatrix(&N);
+	if (RLSMatrixAdd(&M, &N, &Q) == OK)
+	{
+		printf("M＋N=\n");
+		PrintRLSMatrix(&Q);
+	}
+
 	RLSMatrixDestroy(&M);
 	RLSMatrixDestroy(&N);
 	RLSMatrixDestroy(&Q);
@@ -313,6 +446,9 @@ void ShowRLSMatrix()
 	printf("按任意键演示稀疏矩阵乘法\n");
 	_getch();
 	ShowRLSMatrixMulti();
+	printf("按任意键演示稀疏矩阵加法\n");
+	_getch();
+	ShowRLSMatrixAdd();
 }
 
 void ShowMatrix()
@@ -321,6 +457,9 @@ void ShowMatrix()
 	printf("按任意键演示矩阵乘法\n");
 	_getch();
 	ShowMatrixMulti();
+	printf("按任意键演示矩阵加法\n");
+	_getch();
+	ShowMatrixAdd();
 	return;
 }
 

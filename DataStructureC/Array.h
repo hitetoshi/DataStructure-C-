@@ -30,7 +30,7 @@ extern "C"
 	//若各下标不越界,则将e赋给所指定的A的元素,并返回OK
 	Status ArrayAssign(ARRAY *A, ELEMENT *e, ...);
 
-	//为方便C语言编程的调用接口改进
+	//为方便C语言编程的调用接口扩展
 
 	//按照dim维度构造数组A,各维长度存放于length中
 	Status ArrayInit2(ARRAY *A, size_t dim, size_t *length);
@@ -41,10 +41,12 @@ extern "C"
 	//若给定维数与A的维数相同,则将e的值赋给index下标指定的A的元素e
 	Status ArrayAssign2(ARRAY *A, ELEMENT *e, size_t dim, size_t *index);
 
+	////////////////////////////////////////////////////////////////////////////////////
 	//由数组实现的普通矩阵
+	////////////////////////////////////////////////////////////////////////////////////
 
 	//根据矩阵的定义,矩阵的元只能是数
-	//本例只讨论实矩阵,因此,矩阵的数据类型定义为float
+	//本例只讨论实矩阵,因此,矩阵的数据类型定义为float(不考虑矩阵的元是表达式的情况)
 	typedef	struct _MATRIX
 	{
 		ARRAY data;
@@ -72,8 +74,15 @@ extern "C"
 	Status MatrixTranspose(MATRIX *M, MATRIX *T);
 	//矩阵M,N,Q已初始化,若M可左乘N,将M左乘N的结果存入Q,否则返回ERROR
 	Status MatrixMult(MATRIX *M, MATRIX *N, MATRIX *Q);
+	//矩阵M,N,Q已初始化,若M和N可相加,计算M+N,结果存入Q
+	Status MatrixAdd(MATRIX *M, MATRIX *N, MATRIX *Q);
+	//矩阵M,N,Q已初始化,若M和N可相减,计算M-N,结果存入Q
+	Status MatrixSub(MATRIX *M, MATRIX *N, MATRIX *Q);
+	////////////////////////////////////////////////////////////////////////////////////
 
-	//压缩存储的稀疏矩阵(行逻辑链接顺序表)
+	////////////////////////////////////////////////////////////////////////////////////
+	//稀疏矩阵(行逻辑链接顺序表)
+	////////////////////////////////////////////////////////////////////////////////////
 	typedef	struct _TRIPLE
 	{
 		size_t i, j;	//元下标
@@ -135,11 +144,33 @@ extern "C"
 	//算法5.3稀疏矩阵相乘
 	//稀疏矩阵M,N,Q已初始化,若M可左乘N,将M左乘N的结果存入Q,否则返回ERROR
 	Status RLSMatrixMult(RLSMATRIX *M, RLSMATRIX *N, RLSMATRIX *Q);
+	//稀疏矩阵M,N,Q已初始化,若M和N可相加,将M+N的结果存入Q,否则返回ERROR
+	Status RLSMatrixAdd(RLSMATRIX *M, RLSMATRIX *N, RLSMATRIX *Q);
+	//稀疏矩阵M,N,Q已初始化,若M和N可相减,将M-N的结果存入Q,否则返回ERROR
+	Status RLSMatrixSub(RLSMATRIX *M, RLSMATRIX *N, RLSMATRIX *Q);
 
 	//将稀疏矩阵M转储到矩阵T
 	Status RLSMatrixDump(MATRIX *T, RLSMATRIX *M);
 	//稀疏矩阵M已初始化,清除M中存储的信息
 	void RLSMatrixClear(RLSMATRIX *M);
+	////////////////////////////////////////////////////////////////////////////////////
+
+	////////////////////////////////////////////////////////////////////////////////////
+	//稀疏矩阵(十字链表存储结构)
+	////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////
+	typedef	struct _OLNODE
+	{
+		int i, j;						//该非零元的行和列下标
+		float value;
+		struct _OLDNODE *right, *down;	//该非零元所在行表和列表的后继链域
+	}OLNODE, OLINK;
+
+	typedef	struct
+	{
+		OLINK *rhead, *chead;	//行和列链表头指针向量基址由CreateCLSMatrix分配
+		int mu, nu, tu;			//稀疏矩阵的行数,列数和非零元个数
+	}CROSSLIST;
 
 #ifdef __cplusplus
 }
